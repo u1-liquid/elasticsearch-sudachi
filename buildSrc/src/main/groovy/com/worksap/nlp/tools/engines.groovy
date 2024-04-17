@@ -9,9 +9,9 @@ enum EsSupport implements EngineSupport {
     Es78("es-7.08"),
     Es715("es-7.15"),
     Es80("es-8.00"),
-    Es83("es-8.30"),
-    Es84("es-8.40"),
-    Es810("es-8.100")
+    Es83("es-8.03"),
+    Es84("es-8.04"),
+    Es810("es-8.10")
 
     String tag
     List<String> keys
