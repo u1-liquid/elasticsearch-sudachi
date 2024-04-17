@@ -49,11 +49,6 @@ class SearchEngineEnv(vararg components: String = arrayOf("system")) : ExternalR
   val analysisRegistry
     get() = analysisModule.analysisRegistry
 
-  fun indexAnalyzers(settings: Settings): IndexAnalyzers {
-    val indexSettings = IndexSettingsModule.newIndexSettings(Index("test", "_na_"), settings)
-    return analysisRegistry.build(indexSettings)
-  }
-
   fun tokenizers(settings: Map<String, String>): Map<String, TokenizerFactory> {
     val builder = Settings.builder()
     settings.forEach { (key: String?, value: String?) -> builder.put(key, value) }
