@@ -89,6 +89,20 @@ test {
     defaultCharacterEncoding = 'utf-8'
 }
 
+def distZip = tasks.register('distZip', Zip) {
+    var esKind = sudachiEs.kind.get()
+    archiveBaseName.set("${esKind.engine.kind}-${esKind.version}-$archivesBaseName")
+    from(
+        project(':subplugin').packageJars.outputs.files,
+        project(':subplugin').embedVersion.outputs.files,
+        project(':testlib').jar.outputs.files,
+    )
+}
+
+artifacts {
+    archives distZip
+}
+
 spotless {
     // watch for https://github.com/diffplug/spotless/issues/911 to be closed
     ratchetFrom 'origin/develop'
