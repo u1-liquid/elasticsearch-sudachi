@@ -27,10 +27,10 @@ else
 fi
 
 
-
 PLUGIN_PATH="$SCRIPT_DIR/../build/distributions/$ES_KIND-$ES_VERSION-analysis-sudachi-$PLUGIN_VERSION.zip"
+TEST_PLUGIN_PATH="$SCRIPT_DIR/../integration/build/distributions/$ES_KIND-$ES_VERSION-integration-$PLUGIN_VERSION.zip"
 
-if [[ ! -f "$PLUGIN_PATH" ]]; then
+if [[ ! -f "$PLUGIN_PATH" || ! -f "$TEST_PLUGIN_PATH" ]]; then
   echo "Plugin is not built, run ./gradlew build"
   exit 1
 fi
@@ -46,6 +46,8 @@ fi
 
 PLUGIN_PATH="$(readlink -f "$PLUGIN_PATH")"
 PLUGIN="file://$PLUGIN_PATH"
+TEST_PLUGIN_PATH="$(readlink -f "$TEST_PLUGIN_PATH")"
+TEST_PLUGIN="file://$TEST_PLUGIN_PATH"
 
 if [[ ! -d "$ES_DIR" ]]; then
   tar xf "$ES_FILE"
@@ -54,8 +56,16 @@ fi
 if [[ -d "$ES_DIR/plugins/analysis-sudachi" ]]; then
   "$ES_DIR/bin/$ES_PLUGIN_BIN" remove analysis-sudachi
 fi
+if [[ -d "$ES_DIR/plugins/analysis-icu" ]]; then
+  "$ES_DIR/bin/$ES_PLUGIN_BIN" remove analysis-icu
+fi
+if [[ -d "$ES_DIR/plugins/analysis-sudachi-childtest" ]]; then
+  "$ES_DIR/bin/$ES_PLUGIN_BIN" remove analysis-sudachi-childtest
+fi
 
 "$ES_DIR/bin/$ES_PLUGIN_BIN" install "$PLUGIN"
+"$ES_DIR/bin/$ES_PLUGIN_BIN" install "analysis-icu"
+"$ES_DIR/bin/$ES_PLUGIN_BIN" install "$TEST_PLUGIN"
 
 if [[ "$ES_KIND" == "elasticsearch" ]]; then
   cp "$SCRIPT_DIR/elasticsearch.yml" "$ES_DIR/config/elasticsearch.yml"
@@ -63,7 +73,8 @@ else
   cp "$SCRIPT_DIR/opensearch.yml" "$ES_DIR/config/opensearch.yml"
 fi
 
-DIC_ZIP_PATH="$WORK_DIR/sudachi-dictionary-$DIC_VERSION-small.zip"
+
+DIC_ZIP_PATH="$WORK_DIR/sudachi-dictionary-$DIC_VERSION-$DIC_KIND.zip"
 
 if [[ ! -f "$DIC_ZIP_PATH" ]]; then
   wget --progress=dot:giga "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict/sudachi-dictionary-$DIC_VERSION-$DIC_KIND.zip"
@@ -71,7 +82,14 @@ fi
 
 if [[ "$ES_DIR/config/sudachi/system_core.dic" -ot "$DIC_ZIP_PATH" ]]; then
   mkdir -p "$ES_DIR/config/sudachi"
-  unzip -p "$DIC_ZIP_PATH" "*/system_small.dic" > "$ES_DIR/config/sudachi/system_core.dic"
+  unzip -p "$DIC_ZIP_PATH" "*/system_$DIC_KIND.dic" > "$ES_DIR/config/sudachi/system_core.dic"
+fi
+
+TEST_DIC_PATH="$SCRIPT_DIR/../integration/build/generated/dict/system.dict"
+TEST_DIC_PATH="$(readlink -f "$TEST_PLUGIN_PATH")"
+
+if [[ "$ES_DIR/config/sudachi/system_test.dic" -ot "$TEST_DIC_PATH" ]]; then
+  cp "$TEST_DIC_PATH" "$ES_DIR/config/sudachi/system_test.dic"
 fi
 
 
