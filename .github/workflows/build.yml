@@ -14,7 +14,12 @@ jobs:
     strategy:
       matrix:
         es-version:
-          - 'es:8.8.1'
+          - 'es:8.13.3'
+          - 'es:8.12.2'
+          - 'es:8.11.4'
+          - 'es:8.10.4'
+          - 'es:8.9.2'
+          - 'es:8.8.2'
           - 'es:8.7.1'
           - 'es:8.6.2'
           - 'es:8.5.3'
@@ -89,6 +94,7 @@ jobs:
       run: |
         bash test-scripts/00-install-elasticsearch.sh
         sleep 30
+        python3 test-scripts/01-integration-test.py
         bash test-scripts/10-make-index.sh
         python3 test-scripts/20-put-docs.py
         python3 test-scripts/30-test-docs.py
