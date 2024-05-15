@@ -1,8 +1,27 @@
 import argparse
 import json
+import os
 from pathlib import Path
 import unittest
 import urllib3
+
+
+def should_run_test() -> bool:
+    # define based on `buildSrc/**/EsTestEnvPlugin.groovy`
+    es_kind = os.environ.get("ES_KIND", "elasticsearch")
+    es_version = os.environ.get("ES_VERSION", "8.2.3")
+
+    if es_kind == "elasticsearch":
+        vers = list(map(int, es_version.split(".")))
+        if vers[0] == 7 and vers[1] < 14:
+            return False
+        if vers[0] == 8 and vers[1] < 5:
+            return False
+        return True
+    elif es_kind == "opensearch":
+        return True
+    else:
+        raise ValueError(f"not supported search engine: {es_kind}")
 
 
 def parse_args():
@@ -15,6 +34,9 @@ def parse_args():
 
 
 def main():
+    if not should_run_test():
+        return
+
     global es_instance
     es_instance = ElasticSearch(parse_args())
     unittest.main()

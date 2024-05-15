@@ -166,7 +166,7 @@ class EsTestEnvPlugin implements Plugin<Project> {
         if (kind.engine == EngineType.OpenSearch) {
             return v.ge(2, 6)
         } else if (kind.engine == EngineType.ElasticSearch) {
-            return (v.ge(7, 14) && v.lt(7, 99)) || v.ge(8, 5)
+            return (v.ge(7, 14) && v.lt(7, 99)) || (v.ge(8, 5) && v.lt(8, 9))
         } else {
             throw new IllegalArgumentException("not supported version ${kind}")
         }
