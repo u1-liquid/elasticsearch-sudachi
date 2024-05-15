@@ -1,5 +1,6 @@
 import argparse
 import json
+from pathlib import Path
 import unittest
 import urllib3
 
@@ -121,6 +122,29 @@ class TestSubplugin(unittest.TestCase):
         self.assertEqual(0, tokens[0]["position"])
         self.assertEqual(0, tokens[0]["start_offset"])
         self.assertEqual(7, tokens[0]["end_offset"])
+        return
+
+
+class TestSecurityManager(unittest.TestCase):
+    def test_fail_loading_files_outside_configdir(self):
+        test_sudachi_config = Path(__file__).parent / "sudachi.json"
+        self.assertTrue(test_sudachi_config.exists(),
+                        f"config file should exists: {test_sudachi_config}")
+
+        body = {
+            "tokenizer": {
+                "type": "sudachi_tokenizer",
+                "settings_path": str(test_sudachi_config.resolve()),
+            },
+            "text": "",
+        }
+        resp = es_instance.analyze(body)
+
+        self.assertEqual(500, resp.status, f"data: {resp.data}")
+        err = json.loads(resp.data)["error"]
+        # sudachi raises notfound error when SecurityException occurs during file search
+        self.assertTrue(err["reason"].startswith(
+            "com.worksap.nlp.sudachi.Config$Resource$NotFound"))
         return
 
 
