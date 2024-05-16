@@ -107,7 +107,7 @@ fi
 
 if [[ "$SHOULD_RUN_TEST01" == "true" ]]; then
   TEST_DIC_PATH="$SCRIPT_DIR/../integration/build/generated/dict/system.dict"
-  TEST_DIC_PATH="$(readlink -f "$TEST_PLUGIN_PATH")"
+  TEST_DIC_PATH="$(readlink -f "$TEST_DIC_PATH")"
 
   if [[ "$ES_DIR/config/sudachi/system_test.dic" -ot "$TEST_DIC_PATH" ]]; then
     cp "$TEST_DIC_PATH" "$ES_DIR/config/sudachi/system_test.dic"
