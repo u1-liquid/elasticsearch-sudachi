@@ -9,8 +9,10 @@ enum EsSupport implements EngineSupport {
     Es78("es-7.08"),
     Es715("es-7.15"),
     Es80("es-8.00"),
-    Es83("es-8.30"),
-    Es84("es-8.40")
+    Es83("es-8.03"),
+    Es84("es-8.04"),
+    Es810("es-8.10"),
+    Es812("es-8.12"),
 
     String tag
     List<String> keys
@@ -33,8 +35,12 @@ enum EsSupport implements EngineSupport {
             return Es80
         } else if (vers.ge(8, 3) && vers.lt(8, 4)) {
             return Es83
-        } else if (vers.ge(8, 4) && vers.lt(9, 0)) {
+        } else if (vers.ge(8, 4) && vers.lt(8, 10)) {
             return Es84
+        } else if (vers.ge(8, 10) && vers.lt(8, 12)) {
+            return Es810
+        } else if (vers.ge(8, 12) && vers.lt(9, 0)) {
+            return Es812
         } else {
             throw new IllegalArgumentException("unsupported ElasticSearch version: " + vers.raw)
         }
