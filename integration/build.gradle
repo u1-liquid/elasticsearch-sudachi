@@ -74,6 +74,7 @@ esTestEnv {
 }
 
 test {
+    onlyIf { ! (sudachiEs.isEs() && sudachiEs.kind.get().parsedVersion().ge(8, 9)) }
     dependsOn(
             ':packageJars',
             ':packageSpiJars',
