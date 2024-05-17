@@ -7,25 +7,32 @@ analysis-sudachi is an Elasticsearch plugin for tokenization of Japanese text us
 
 # What's new?
 
+- [3.1.1]
+  - Support ElasticSearch -8.13.4 and OpenSearch -2.14.0. (#114, #118)
+
 Check [changelog](./CHANGELOG.md) for more.
 
 # Build (if necessary)
 
 1. Build analysis-sudachi.
 ```
-   $ ./gradlew -PengineVersion=es:8.6.2 build
+   $ ./gradlew -PengineVersion=es:8.13.4 build
 ```
 
-Use `-PengineVersion=os:2.6.0` for OpenSearch.
+Use `-PengineVersion=os:2.14.0` for OpenSearch.
 
 ## Supported ElasticSearch versions
 
-1. 8.0.* until 8.6.* supported, integration tests in CI
+1. 8.0.* until 8.13.* supported, integration tests in CI
 2. 7.17.* (latest patch version) - supported, integration tests in CI
 3. 7.11.* until 7.16.* - best effort support, not tested in CI
 4. 7.10.* integration tests for the latest patch version
 5. 7.9.* and below - not tested in CI at all, may be broken
 6. 7.3.* and below - broken, not supported
+
+## Supported OpenSearch versions
+
+1. 2.6.* until 2.14.* supported, integration tests in CI
 
 # Installation
 
@@ -545,6 +552,6 @@ Returns `susi`.
 
 # License
 
-Copyright (c) 2017-2020 Works Applications Co., Ltd.
+Copyright (c) 2017-2024 Works Applications Co., Ltd.
 Originally under elasticsearch, https://www.elastic.co/jp/products/elasticsearch
 Originally under lucene, https://lucene.apache.org/
