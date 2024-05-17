@@ -38,7 +38,7 @@ jobs:
           - 'os:2.7.0'
           - 'os:2.6.0'
     env:
-      mainJob: ${{ matrix.es-version == 'es:8.8.1' }}
+      mainJob: ${{ matrix.es-version == 'es:8.13.4' }}
       githubRef: ${{ github.ref }}
     continue-on-error: true
     steps:

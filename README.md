@@ -7,71 +7,32 @@ analysis-sudachi is an Elasticsearch plugin for tokenization of Japanese text us
 
 # What's new?
 
-- version 3.1.0
-    - support OpenSearch 2.6.0+ in addition to ElasticSearch
-    - analysis-sudachi plugin is now can be extended by other plugins. Loading sudachi plugins from extending plugins is supported as well
-- version 3.0.0
-    - Plugin is now implemented in Kotlin
-- version 2.1.0
-    - Added a new property `additional_settings` to write Sudachi settings directly in config
-    - Added support for specifying Elasticsearch version at build time
-- version 2.0.3
-    - Fix duplicated tokens for OOVs with `sudachi_split` filter's `extended mode`
-- version 2.0.2
-    - Upgrade Sudachi to 0.4.3
-        - Fix overrun with surrogate pairs
-- version 2.0.1
-    - Upgrade Sudachi to 0.4.2
-        - Fix buffer overrun with character normalization
-- version 2.0.0
-    - New mode `split_mode` was added
-    - New filter `sudachi_split` was added instead of `mode`
-    - `mode` was deperecated
-    - Upgrade Sudachi morphological analyzer to 0.4.1
-    - Words containing periods are no longer split
-    - Fix a bug causing wrong offsets with `icu_normalizer`
+- [3.1.1]
+  - Support ElasticSearch -8.13.4 and OpenSearch -2.14.0. (#114, #118)
 
-- version 1.3.2
-    - Upgrade Sudachi morphological analyzer to 0.3.1
-
-- version 1.3.1
-    - Upgrade Sudachi morphological analyzer to 0.3.0
-    - Minor bug fix
-
-- version 1.3.0
-    - Upgrade Sudachi morphological analyzer to 0.2.0
-    - Import Sudachi from maven central repository
-    - Minor bug fix
-
-- version 1.2.0
-    - Upgrading Sudachi morphological analyzer to 0.2.0-SNAPSHOT
-    - New filter `sudachi_normalizedform` was added; see [sudachi_normalizedform](#sudachi_normalizedform)
-    - Default normalization behavior was changed; neather baseform filter and normalziedform filter not applied
-    - `sudachi_readingform` filter was changed with new romaji mappings based on MS-IME
-
-- version 1.1.0
-    - `part-of-speech forward matching` is available on `stoptags`; see [sudachi_part_of_speech](#sudachi_part_of_speech)
-
-- version 1.0.0
-    - first release
+Check [changelog](./CHANGELOG.md) for more.
 
 # Build (if necessary)
 
 1. Build analysis-sudachi.
 ```
-   $ ./gradlew -PengineVersion=es:8.6.2 build
+   $ ./gradlew -PengineVersion=es:8.13.4 build
 ```
 
-Use `-PengineVersion=os:2.6.0` for OpenSearch.
+Use `-PengineVersion=os:2.14.0` for OpenSearch.
 
 ## Supported ElasticSearch versions
 
-1. 8.0.* until 8.6.* supported, integration tests in CI
+1. 8.0.* until 8.13.* supported, integration tests in CI
 2. 7.17.* (latest patch version) - supported, integration tests in CI
 3. 7.11.* until 7.16.* - best effort support, not tested in CI
 4. 7.10.* integration tests for the latest patch version
 5. 7.9.* and below - not tested in CI at all, may be broken
 6. 7.3.* and below - broken, not supported
+
+## Supported OpenSearch versions
+
+1. 2.6.* until 2.14.* supported, integration tests in CI
 
 # Installation
 
@@ -591,6 +552,6 @@ Returns `susi`.
 
 # License
 
-Copyright (c) 2017-2020 Works Applications Co., Ltd.
+Copyright (c) 2017-2024 Works Applications Co., Ltd.
 Originally under elasticsearch, https://www.elastic.co/jp/products/elasticsearch
 Originally under lucene, https://lucene.apache.org/
