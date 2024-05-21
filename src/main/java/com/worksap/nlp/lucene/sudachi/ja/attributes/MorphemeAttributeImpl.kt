@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2022-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,36 @@
 
 package com.worksap.nlp.lucene.sudachi.ja.attributes
 
+import com.worksap.nlp.lucene.aliases.ToXContent
+import com.worksap.nlp.lucene.aliases.ToXContentParams
+import com.worksap.nlp.lucene.aliases.XContentBuilder
 import com.worksap.nlp.lucene.sudachi.ja.reflect
 import com.worksap.nlp.sudachi.Morpheme
 import org.apache.lucene.util.AttributeImpl
 import org.apache.lucene.util.AttributeReflector
 
 class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
-  private var morpheme: Morpheme? = null
+  private var morpheme: MorphemeWrapper? = null
+
+  private class MorphemeWrapper(morpheme: Morpheme) : ToXContent {
+    private val morpheme = morpheme
+
+    override fun toXContent(builder: XContentBuilder, params: ToXContentParams): XContentBuilder {
+      builder.value(
+          mapOf(
+              "surface" to morpheme.surface(),
+              "dictionaryForm" to morpheme.dictionaryForm(),
+              "normalizedForm" to morpheme.normalizedForm(),
+              "readingForm" to morpheme.readingForm(),
+              "partOfSpeech" to morpheme.partOfSpeech(),
+          ))
+      return builder
+    }
+
+    fun unwrap(): Morpheme {
+      return morpheme
+    }
+  }
 
   override fun clear() {
     morpheme = null
@@ -37,10 +60,10 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
   }
 
   override fun getMorpheme(): Morpheme? {
-    return morpheme
+    return morpheme?.let { m -> m.unwrap() }
   }
 
   override fun setMorpheme(morpheme: Morpheme?) {
-    this.morpheme = morpheme
+    this.morpheme = morpheme?.let { m -> MorphemeWrapper(m) }
   }
 }
