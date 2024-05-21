@@ -97,6 +97,27 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(6, tokens[3]["end_offset"])
         return
 
+    def test_explain_tokenizer_details(self):
+        body = {"tokenizer": "sudachi_tokenizer",
+                "text": "すだち", "explain": True}
+        resp = es_instance.analyze(body)
+        self.assertEqual(200, resp.status)
+
+        morpheme = json.loads(resp.data)[
+            "detail"]["tokenizer"]["tokens"][0]["morpheme"]
+        self.assertIn("surface", morpheme)
+        self.assertEqual("すだち", morpheme["surface"])
+        self.assertIn("dictionaryForm", morpheme)
+        self.assertEqual("すだち", morpheme["dictionaryForm"])
+        self.assertIn("normalizedForm", morpheme)
+        self.assertEqual("酢橘", morpheme["normalizedForm"])
+        self.assertIn("readingForm", morpheme)
+        self.assertEqual("スダチ", morpheme["readingForm"])
+        self.assertIn("partOfSpeech", morpheme)
+        self.assertEqual(["名詞", "普通名詞", "一般", "*", "*", "*"],
+                         morpheme["partOfSpeech"])
+        return
+
 
 class TestICUFiltered(unittest.TestCase):
     # requires analysis-icu plugin installed
