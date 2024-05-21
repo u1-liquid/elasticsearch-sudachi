@@ -17,14 +17,19 @@
 package com.worksap.nlp.lucene.sudachi.ja.attributes
 
 import com.worksap.nlp.lucene.aliases.ToXContent
+import com.worksap.nlp.lucene.aliases.XContentBuilder
+import com.worksap.nlp.search.aliases.XContentType
 import com.worksap.nlp.sudachi.Config
 import com.worksap.nlp.sudachi.DictionaryFactory
 import com.worksap.nlp.sudachi.Morpheme
 import com.worksap.nlp.test.TestDictionary
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.Before
 import org.junit.Rule
 
@@ -52,22 +57,52 @@ class MorphemeAttributeImplTest {
     var morphemeAtt = MorphemeAttributeImpl()
     assertNull(morphemeAtt.getMorpheme())
 
-    val morph = getFirstMorpheme("東京都")!!
-    morphemeAtt.setMorpheme(morph)
-    assertEquals(morph, morphemeAtt.getMorpheme())
+    val morpheme = getFirstMorpheme("東京都")!!
+    morphemeAtt.setMorpheme(morpheme)
+    assertEquals(morpheme, morphemeAtt.getMorpheme())
+
+    morphemeAtt.setMorpheme(null)
+    assertNull(morphemeAtt.getMorpheme())
   }
 
   @Test
-  fun reflectMorpheme() {
+  fun toXContent() {
     var morphemeAtt = MorphemeAttributeImpl()
-    val morph = getFirstMorpheme("東京都")!!
-    morphemeAtt.setMorpheme(morph)
+    val morpheme = getFirstMorpheme("東京都")!!
+    morphemeAtt.setMorpheme(morpheme)
 
+    val builder = XContentBuilder.builder(XContentType.JSON.xContent())
+    builder.startObject()
     morphemeAtt.reflectWith(
         fun(attClass, key, value) {
           assertEquals(MorphemeAttribute::class.java, attClass)
           assertEquals("morpheme", key)
           assertTrue(value is ToXContent)
+
+          builder.field(key, value)
         })
+    builder.endObject()
+    builder.flush()
+
+    val serialized = builder.getOutputStream().toString()
+    val deserialized = Json.decodeFromString<MorphemeHolder>(serialized)
+
+    assertNotNull(deserialized.morpheme)
+    assertEquals(morpheme.surface(), deserialized.morpheme.surface)
+    assertEquals(morpheme.dictionaryForm(), deserialized.morpheme.dictionaryForm)
+    assertEquals(morpheme.normalizedForm(), deserialized.morpheme.normalizedForm)
+    assertEquals(morpheme.readingForm(), deserialized.morpheme.readingForm)
+    assertEquals(morpheme.partOfSpeech(), deserialized.morpheme.partOfSpeech)
   }
 }
+
+@Serializable data class MorphemeHolder(val morpheme: MorphemeAttributeHolder)
+
+@Serializable
+data class MorphemeAttributeHolder(
+    val surface: String,
+    val dictionaryForm: String,
+    val normalizedForm: String,
+    val readingForm: String,
+    val partOfSpeech: List<String>,
+)
