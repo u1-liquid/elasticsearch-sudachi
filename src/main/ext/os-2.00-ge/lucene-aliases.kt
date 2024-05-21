@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Works Applications Co., Ltd.
+ * Copyright (c) 2023 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,3 @@ typealias TokenFilterFactory = org.apache.lucene.analysis.TokenFilterFactory
 typealias ResourceLoaderArgument = org.apache.lucene.util.ResourceLoader
 
 typealias ResourceLoaderAware = org.apache.lucene.util.ResourceLoaderAware
-
-typealias ToXContent = org.opensearch.core.xcontent.ToXContent
-
-typealias ToXContentParams = org.opensearch.core.xcontent.ToXContent.Params
-
-typealias XContentBuilder = org.opensearch.core.xcontent.XContentBuilder

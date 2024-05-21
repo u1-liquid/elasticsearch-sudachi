@@ -49,7 +49,8 @@ enum EsSupport implements EngineSupport {
 
 enum OsSupport implements EngineSupport {
     Os20("os-2.00"),
-    Os210("os-2.10")
+    Os27("os-2.07"),
+    Os210("os-2.10"),
 
     String tag
 
@@ -59,8 +60,10 @@ enum OsSupport implements EngineSupport {
 
 
     static OsSupport supportVersion(Version version) {
-        if (version.ge(2, 0) && version.lt(2, 10)) {
+        if (version.ge(2, 0) && version.lt(2, 7)) {
             return Os20
+        } else if (version.ge(2, 7) && version.lt(2, 10)) {
+            return Os27
         } else if (version.ge(2, 10)) {
             return Os210
         }
