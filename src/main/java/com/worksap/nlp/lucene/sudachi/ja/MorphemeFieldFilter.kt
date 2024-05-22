@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2022-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute
  * Values of [MorphemeAttribute] are used to produce the
  */
 abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
-  @JvmField protected val morpheme = existingAttribute<MorphemeAttribute>()
+  @JvmField protected val morphemeAtt = existingAttribute<MorphemeAttribute>()
   @JvmField protected val keywordAtt = addAttribute<KeywordAttribute>()
   @JvmField protected val termAtt = addAttribute<CharTermAttribute>()
   @JvmField
@@ -52,7 +52,7 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
     if (!input.incrementToken()) {
       return false
     }
-    val m = morpheme.morpheme ?: return true
+    val m = morphemeAtt.getMorpheme() ?: return true
     var needToSet = consumer.shouldConsume(this)
     if (!keywordAtt.isKeyword) {
       val term = value(m)
@@ -70,7 +70,8 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
   override fun reset() {
     super.reset()
     if (!consumer.shouldConsume(this)) {
-      logger.warn("an instance of ${javaClass.name} is a no-op, it is not a filter which produces terms in one of your filter chains")
+      logger.warn(
+          "an instance of ${javaClass.name} is a no-op, it is not a filter which produces terms in one of your filter chains")
     }
   }
 

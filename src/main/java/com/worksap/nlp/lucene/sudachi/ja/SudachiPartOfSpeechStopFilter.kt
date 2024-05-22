@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2017-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ class SudachiPartOfSpeechStopFilter(
     input: TokenStream?,
     private val matcher: ReloadAware<PosMatcher>
 ) : FilteringTokenFilter(input) {
-  private val morpheme = addAttribute<MorphemeAttribute>()
+  private val morphemeAtt = existingAttribute<MorphemeAttribute>()
 
   override fun reset() {
     super.reset()
@@ -34,6 +34,6 @@ class SudachiPartOfSpeechStopFilter(
   }
 
   override fun accept(): Boolean {
-    return !matcher.get().test(morpheme.morpheme)
+    return !matcher.get().test(morphemeAtt.getMorpheme())
   }
 }

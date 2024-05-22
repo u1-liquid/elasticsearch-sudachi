@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2022-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class SudachiTokenizer(
   override fun incrementToken(): Boolean {
     clearAttributes()
     val m = iterator.next() ?: return false
-    morphemeAtt.morpheme = m
+    morphemeAtt.setMorpheme(m)
     posLenAtt.positionLength = 1
     posIncAtt.positionIncrement = 1
     val baseOffset = iterator.baseOffset
