@@ -34,6 +34,7 @@ class SudachiPartOfSpeechStopFilter(
   }
 
   override fun accept(): Boolean {
-    return !matcher.get().test(morphemeAtt.getMorpheme())
+    val m = morphemeAtt.getMorpheme() ?: return true
+    return !matcher.get().test(m)
   }
 }
