@@ -295,7 +295,7 @@ With the `stoptags`, you can filter out the result in any of these forward match
       "position": 0
     },
     {
-      "token": "美味しい",
+      "token": "おいしい",
       "start_offset": 3,
       "end_offset": 7,
       "type": "word",
