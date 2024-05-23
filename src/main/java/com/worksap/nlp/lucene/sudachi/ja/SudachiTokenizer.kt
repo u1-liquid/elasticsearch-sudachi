@@ -62,9 +62,7 @@ class SudachiTokenizer(
     posIncAtt.positionIncrement = 1
     val baseOffset = iterator.baseOffset
     offsetAtt.setOffset(correctOffset(baseOffset + m.begin()), correctOffset(baseOffset + m.end()))
-    if (consumer.shouldConsume(this)) {
-      termAtt.append(m.surface())
-    }
+    termAtt.setEmpty().append(m.surface())
     return true
   }
 

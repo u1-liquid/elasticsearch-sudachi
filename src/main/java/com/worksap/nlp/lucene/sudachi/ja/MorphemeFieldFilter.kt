@@ -33,7 +33,7 @@ import org.apache.lucene.analysis.tokenattributes.KeywordAttribute
  * [org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter] or a custom [TokenFilter] that
  * sets the [KeywordAttribute] before this [TokenStream].
  *
- * Values of [MorphemeAttribute] are used to produce the
+ * Values of [MorphemeAttribute] are used to produce the term.
  */
 abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
   @JvmField protected val morphemeAtt = existingAttribute<MorphemeAttribute>()
@@ -53,16 +53,15 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
       return false
     }
     val m = morphemeAtt.getMorpheme() ?: return true
-    if (consumer.shouldConsume(this)) {
-      var term: CharSequence? = null
-      if (!keywordAtt.isKeyword) {
-        term = value(m)
-      }
-      if (term == null) {
-        term = m.surface()
-      }
-      termAtt.setEmpty().append(term)
+    var term: CharSequence? = null
+    if (!keywordAtt.isKeyword) {
+      term = value(m)
     }
+    if (term == null) {
+      term = m.surface()
+    }
+    termAtt.setEmpty().append(term)
+
     return true
   }
 

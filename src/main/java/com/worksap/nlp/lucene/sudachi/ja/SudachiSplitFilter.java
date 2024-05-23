@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2020-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,9 +125,7 @@ public class SudachiSplitFilter extends TokenFilter {
             if (m == null) {
                 return true;
             }
-            if (consumerAttribute.shouldConsume(this)) {
-                termAtt.append(m.surface());
-            }
+            termAtt.setEmpty().append(m.surface());
             if (mode == Mode.EXTENDED && m.isOOV() && (length = Strings.codepointCount(termAtt)) > 1) {
                 oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
                 posLengthAtt.setPositionLength(length);
@@ -158,9 +156,7 @@ public class SudachiSplitFilter extends TokenFilter {
         offsetAtt.setOffset(aUnitOffset, aUnitOffset + length);
         aUnitOffset += length;
         morphemeAtt.setMorpheme(morpheme);
-        if (consumerAttribute.shouldConsume(this)) {
-            termAtt.append(morpheme.surface());
-        }
+        termAtt.setEmpty().append(morpheme.surface());
     }
 
     private void setOOVAttribute() {
@@ -172,7 +168,7 @@ public class SudachiSplitFilter extends TokenFilter {
             posIncAtt.setPositionIncrement(1);
         }
         char c = oovChars.next();
-        termAtt.append(c);
+        termAtt.setEmpty().append(c);
         if (Character.isSurrogate(c) && oovChars.hasNext()) {
             termAtt.append(oovChars.next());
             offsetAtt.setOffset(offset, offset + 2);
