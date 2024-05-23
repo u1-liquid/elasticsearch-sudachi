@@ -53,16 +53,15 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
       return false
     }
     val m = morphemeAtt.getMorpheme() ?: return true
-    var needToSet = consumer.shouldConsume(this)
-    if (!keywordAtt.isKeyword) {
-      val term = value(m)
-      if (term != null) {
-        termAtt.setEmpty().append(term)
-        needToSet = false
+    if (consumer.shouldConsume(this)) {
+      var term: CharSequence? = null
+      if (!keywordAtt.isKeyword) {
+        term = value(m)
       }
-    }
-    if (needToSet) {
-      termAtt.setEmpty().append(m.surface())
+      if (term == null) {
+        term = m.surface()
+      }
+      termAtt.setEmpty().append(term)
     }
     return true
   }
