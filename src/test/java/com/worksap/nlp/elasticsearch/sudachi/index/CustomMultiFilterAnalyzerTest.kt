@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Works Applications Co., Ltd.
+ * Copyright (c) 2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,8 +45,8 @@ class CustomMultiFilterAnalyzerTest : SearchEngineTestBase {
       }
     """.jsonSettings()
     val analyzers = engine.indexAnalyzers(settings)
-    val basic = analyzers.get("sudachi_test")
-    basic.assertTerms("東京に行った", "トウキョウ", "ニ", "イッ", "タ")
+    val analyzer = analyzers.get("sudachi_test")
+    analyzer.assertTerms("東京に行った", "トウキョウ", "ニ", "イッ", "タ")
   }
 
   @Test
@@ -72,14 +72,14 @@ class CustomMultiFilterAnalyzerTest : SearchEngineTestBase {
             "stop": {
               "type": "sudachi_ja_stop",
               "stopwords": ["に", "行く"]
-            }            
+            }
           }
         }
       }
     """.jsonSettings()
     val analyzers = engine.indexAnalyzers(settings)
-    val basic = analyzers.get("sudachi_test")
-    basic.assertTerms("東京に行った", "東京", "行く", "た")
+    val analyzer = analyzers.get("sudachi_test")
+    analyzer.assertTerms("東京に行った", "東京", "行く", "た")
   }
 
   @Test
@@ -105,13 +105,88 @@ class CustomMultiFilterAnalyzerTest : SearchEngineTestBase {
             "stop": {
               "type": "sudachi_ja_stop",
               "stopwords": ["に", "行く"]
-            }            
+            }
           }
         }
       }
     """.jsonSettings()
     val analyzers = engine.indexAnalyzers(settings)
-    val basic = analyzers.get("sudachi_test")
-    basic.assertTerms("東京に行った", "東京", "た")
+    val analyzer = analyzers.get("sudachi_test")
+    analyzer.assertTerms("東京に行った", "東京", "た")
+  }
+
+  @Test
+  fun split_baseform() {
+    val settings =
+        """
+      {
+        "index.analysis": {
+          "analyzer": {
+            "sudachi_test": {
+              "type": "custom",
+              "tokenizer": "sudachi_tokenizer",
+              "filter": ["split_extended", "sudachi_baseform"]
+            }
+          },
+          "tokenizer": {
+            "sudachi_tokenizer": {
+              "type": "sudachi_tokenizer",
+              "split_mode": "C"
+            }
+          },
+          "filter": {
+            "split_extended": {
+              "type": "sudachi_split",
+              "mode": "extended"
+            }
+          }
+        }
+      }
+    """.jsonSettings()
+    val analyzers = engine.indexAnalyzers(settings)
+    val analyzer = analyzers.get("sudachi_test")
+    analyzer.assertTerms("アマゾンに行った", "アマゾン", "ア", "マ", "ゾ", "ン", "に", "行く", "た")
+  }
+
+  @Test
+  fun split_pos() {
+    val settings =
+        """
+      {
+        "index.analysis": {
+          "analyzer": {
+            "sudachi_test": {
+              "type": "custom",
+              "tokenizer": "sudachi_tokenizer",
+              "filter": ["split_extended", "pos"]
+            }
+          },
+          "tokenizer": {
+            "sudachi_tokenizer": {
+              "type": "sudachi_tokenizer",
+              "split_mode": "C"
+            }
+          },
+          "filter": {
+            "split_extended": {
+              "type": "sudachi_split",
+              "mode": "extended"
+            },
+            "pos": {
+              "type": "sudachi_part_of_speech",
+              "stoptags": [
+                "助詞",
+                "助動詞",
+                "補助記号,句点",
+                "補助記号,読点"
+              ]
+            }
+          }
+        }
+      }
+    """.jsonSettings()
+    val analyzers = engine.indexAnalyzers(settings)
+    val analyzer = analyzers.get("sudachi_test")
+    analyzer.assertTerms("アマゾンに行った", "アマゾン", "ア", "マ", "ゾ", "ン", "行っ")
   }
 }
