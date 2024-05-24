@@ -66,6 +66,21 @@ class MorphemeAttributeImplTest {
   }
 
   @Test
+  fun copyTo() {
+    var morphemeAtt1 = MorphemeAttributeImpl()
+    var morphemeAtt2 = MorphemeAttributeImpl()
+    val morpheme = getFirstMorpheme("東京都")!!
+
+    morphemeAtt1.setMorpheme(morpheme)
+    morphemeAtt1.copyTo(morphemeAtt2)
+    assertEquals(morpheme, morphemeAtt2.getMorpheme())
+
+    morphemeAtt1.setMorpheme(null)
+    morphemeAtt1.copyTo(morphemeAtt2)
+    assertNull(morphemeAtt2.getMorpheme())
+  }
+
+  @Test
   fun toXContent() {
     var morphemeAtt = MorphemeAttributeImpl()
     val morpheme = getFirstMorpheme("東京都")!!

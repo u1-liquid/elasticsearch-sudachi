@@ -56,7 +56,7 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
   }
 
   override fun copyTo(target: AttributeImpl?) {
-    (target as? MorphemeAttributeImpl)?.let { it.morpheme = target.morpheme }
+    (target as? MorphemeAttributeImpl)?.let { it.setMorpheme(getMorpheme()) }
   }
 
   override fun getMorpheme(): Morpheme? {
