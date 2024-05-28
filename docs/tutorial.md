@@ -1,30 +1,31 @@
-# Elasticsearch用Sudachiプラグイン チュートリアル
+# Elasticsearch / OpenSearch Sudachi プラグイン チュートリアル
 
-Elasticsearch プラグインは 5.6, 6.8 の最新バージョンと7系の最新3つのマイナーバージョンをサポートしています。
+elasticsearch-sudachi プラグインは Elasticsearch 7.17, 7.10 の最新バージョンと 8 系、および OpenSearch 2.6 以降をサポートしています。
 
-以下では Elasticsearch 7.7.0 で Sudachi をつかう手順をしめします。
+以下では Elasticsearch 8.13.4 で Sudachi をつかう手順をしめします。
+OpenSearch の場合も同様の手順になります。
 
 Elasticsearch をインストールします。
 
 ```
-$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.7.0-linux-x86_64.tar.gz
-$ tar xzf elasticsearch-7.7.0-linux-x86_64.tar.gz
+$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.13.4-linux-x86_64.tar.gz
+$ tar xzf elasticsearch-8.13.4-linux-x86_64.tar.gz
 ```
 
-プラグインをインストールします。 
+プラグインをインストールします。
 
 ```
-$ cd elasticsearch-7.7.0
-$ bin/elasticsearch-plugin install https://github.com/WorksApplications/elasticsearch-sudachi/releases/download/v7.7.0-2.0.2/analysis-sudachi-7.7.0-2.0.2.zip
+$ cd elasticsearch-8.13.4/
+$ bin/elasticsearch-plugin install https://github.com/WorksApplications/elasticsearch-sudachi/releases/download/v3.1.1/elasticsearch-8.13.4-analysis-sudachi-3.1.1.zip
 ```
 
-パッケージには辞書が含まれていません。https://github.com/WorksApplications/SudachiDict から最新の辞書を取得し、 `es_config/sudachi` の下に置きます。 3つの辞書のうち以下では core 辞書を利用します。
+パッケージには辞書が含まれていません。https://github.com/WorksApplications/SudachiDict から最新の辞書を取得し、 `es_config/sudachi` の下に置きます。 3 つの辞書のうち以下では core 辞書を利用します。
 
 ```
-$ wget https://object-storage.tyo2.conoha.io/v1/nc_2520839e1f9641b08211a5c85243124a/sudachi/sudachi-dictionary-latest-core.zip
+$ wget https://d2ej7fkh96fzlu.cloudfront.net/sudachidict/sudachi-dictionary-latest-core.zip
 $ unzip sudachi-dictionary-latest-core.zip
 $ mkdir config/sudachi
-$ cp sudachi-dictionary-*/system_core.dic config/sudachi/
+$ cp sudachi-dictionary-*/system_core.dic config/sudachi/system_core.dic
 ```
 
 配置後、Elasticsearch を起動します。
@@ -33,7 +34,7 @@ $ cp sudachi-dictionary-*/system_core.dic config/sudachi/
 $ bin/elasticsearch
 ```
 
-設定ファイルを作成します。 
+設定ファイルを作成します。
 
 ```json:analysis_sudachi.json
 {
@@ -91,7 +92,7 @@ $ bin/elasticsearch
                 "sudachi_analyzer" : {
                     "filter" : [],
                     "type": "custom",
-                    "tokenizer": "sudachi_tokenizer",
+                    "tokenizer": "sudachi_tokenizer"
                 },
                 "sudachi_a_analyzer" : {
                     "filter" : [],
@@ -114,14 +115,14 @@ $ bin/elasticsearch
 }
 ```
 
-インデックスを作成します。 
+インデックスを作成します。
 
 ```
 $ curl -X PUT 'localhost:9200/test_sudachi' -H 'Content-Type: application/json' -d @analysis_sudachi.json
 {"acknowledged":true,"shards_acknowledged":true,"index":"test_sudachi"}
 ```
 
-解析してみます。 
+解析してみます。
 
 ```
 $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: application/json' -d'{"analyzer":"sudachi_analyzer", "text" : "関西国際空港"}'
@@ -137,9 +138,11 @@ $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: ap
   ]
 }
 ```
-C単位で分割されます。
 
-A単位で分割すると以下のようになります。
+C 単位で分割されます。
+
+A 単位で分割すると以下のようになります。
+
 ```
 $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: application/json' -d'{"analyzer":"sudachi_a_analyzer", "text" : "関西国際空港"}'
 {
@@ -169,7 +172,7 @@ $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: ap
 }
 ```
 
-動詞、形容詞を終止形で出力してみます。 
+動詞、形容詞を終止形で出力してみます。
 
 ```
 $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: application/json' -d'{"analyzer":"sudachi_baseform_analyzer", "text" : "おおきく"}'
@@ -186,7 +189,7 @@ $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: ap
 }
 ```
 
-表記を正規化して出力してみます。 
+表記を正規化して出力してみます。
 
 ```
 $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: application/json' -d'{"analyzer":"sudachi_normalizedform_analyzer", "text" : "おおきく"}'
@@ -203,7 +206,7 @@ $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: ap
 }
 ```
 
-読みを出力してみます。 
+読みを出力してみます。
 
 ```
 $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: application/json' -d'{"analyzer":"sudachi_readingform_analyzer", "text" : "おおきく"}'
@@ -338,4 +341,7 @@ $ curl -X GET "localhost:9200/test_sudachi/_analyze?pretty" -H 'Content-Type: ap
 }
 ```
 
-こちらもご参照ください: [Elasticsearchのための新しい形態素解析器 「Sudachi」 - Qiita](https://qiita.com/sorami/items/99604ef105f13d2d472b) （Elastic stack Advent Calendar 2017）
+こちらもご参照ください:
+
+- [Elasticsearch のための新しい形態素解析器 「Sudachi」 - Qiita](https://qiita.com/sorami/items/99604ef105f13d2d472b) （Elastic stack Advent Calendar 2017）
+- [OpenSearch + Sudachi を 0 から構築する - Qiita](https://qiita.com/mh-northlander/items/83c3888bb5fefe34be20)
