@@ -41,11 +41,11 @@ Use `-PengineVersion=os:2.14.0` for OpenSearch.
 
    a. Using the release package
    ```
-   $ bin/elasticsearch-plugin install https://github.com/WorksApplications/elasticsearch-sudachi/releases/download/v3.0.0/analysis-sudachi-8.6.0-3.0.0.zip
+   $ bin/elasticsearch-plugin install https://github.com/WorksApplications/elasticsearch-sudachi/releases/download/v3.1.1/analysis-sudachi-8.13.4-3.1.1.zip
    ```
    b. Using self-build package
    ```
-   $ bin/elasticsearch-plugin install file:///path/to/analysis-sudachi-8.6.0-3.0.0.zip
+   $ bin/elasticsearch-plugin install file:///path/to/analysis-sudachi-8.13.4-3.1.1.zip
    ```
    (Specify the absolute path in URI format)
 3. Download sudachi dictionary archive from https://github.com/WorksApplications/SudachiDict
@@ -61,7 +61,36 @@ If you want to update Sudachi that is included in a plugin you have installed, d
 2. Extract the Sudachi JAR file from the zip.
 3. Delete the sudachi JAR file in $ES_HOME/plugins/analysis-sudachi and replace it with the JAR file you extracted in step 2.
 
-# Configuration
+# Analyzer
+
+An analyzer named "sudachi" is provided.
+This is equivalent to the following custom analyzer.
+
+```json
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "default_sudachi_analyzer": {
+            "type": "custom",
+            "tokenizer": "sudachi_tokenizer",
+            "filter": [
+              "sudachi_baseform",
+              "sudachi_part_of_speech",
+              "sudachi_ja_stop"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+See following sections for the detail of the tokenizer and each filters.
+
+# Tokenizer
 
 - split_mode: Select splitting mode of Sudachi. (A, B, C) (string, default: C)
   - C: Extracts named entities
@@ -73,9 +102,18 @@ If you want to update Sudachi that is included in a plugin you have installed, d
 - discard\_punctuation: Select to discard punctuation or not. (bool, default: true)
 - settings\_path: Sudachi setting file path. The path may be absolute or relative; relative paths are resolved with respect to es\_config. (string, default: null)
 - resources\_path: Sudachi dictionary path. The path may be absolute or relative; relative paths are resolved with respect to es\_config. (string, default: null)
-- additional_settings: Describes a configuration JSON string for Sudachi. This JSON string will be merged into the default configuration. If this property is set, `settings_path` will be ignored.
+- additional_settings: Describes a configuration JSON string for Sudachi. This JSON string will be merged into the default configuration. If this property is set, `settings_path` will be overridden.
+
+## Dictionary
+
+By default, `ES_HOME/config/sudachi/sudachi_core.dic` is used.
+You can specify the dictionary either in the file specified by `settings_path` or by `additional_settings`.
+Due to the security manager, you need to put resources (setting file, dictionaries, and others) under the elasticsearch config directory.
 
 ## Example
+
+tokenizer configuration
+
 ```json
 {
   "settings": {
@@ -86,14 +124,13 @@ If you want to update Sudachi that is included in a plugin you have installed, d
             "type": "sudachi_tokenizer",
             "split_mode": "C",
             "discard_punctuation": true,
-            "resources_path": "/etc/elasticsearch/sudachi"
+            "resources_path": "/etc/elasticsearch/config/sudachi"
           }
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [],
-            "tokenizer": "sudachi_tokenizer",
-            "type": "custom"
+            "type": "custom",
+            "tokenizer": "sudachi_tokenizer"
           }
         }
       }
@@ -102,11 +139,7 @@ If you want to update Sudachi that is included in a plugin you have installed, d
 }
 ```
 
-# Dictionary
-
-You can specify the dictionary either in the file specified by `settings_path` or by `additional_settings`.
-
-# Example
+dictionary settings
 
 ```json
 {
@@ -121,9 +154,8 @@ You can specify the dictionary either in the file specified by `settings_path` o
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [],
-            "tokenizer": "sudachi_tokenizer",
-            "type": "custom"
+            "type": "custom",
+            "tokenizer": "sudachi_tokenizer"
           }
         }
       }
@@ -138,12 +170,16 @@ You can specify the dictionary either in the file specified by `settings_path` o
 
 This filter works like `mode` of kuromoji.
 
-- search: Additional segmentation useful for search. (Use C and A mode)
-  - Ex）関西国際空港, 関西, 国際, 空港 / アバラカダブラ
-- extended: Similar to search mode, but also unigram unknown words.
-  - Ex）関西国際空港, 関西, 国際, 空港 / アバラカダブラ, ア, バ, ラ, カ, ダ, ブ, ラ
+- mode
+  - "search": Additional segmentation useful for search. (Use C and A mode)
+    - Ex）関西国際空港, 関西, 国際, 空港 / アバラカダブラ
+  - "extended": Similar to search mode, but also unigram unknown words.
+    - Ex）関西国際空港, 関西, 国際, 空港 / アバラカダブラ, ア, バ, ラ, カ, ダ, ブ, ラ
+
+Note: In search query, split subwords are handled as a phrase (in the same way to multi-word synonyms). If you want to search with both A/C unit, use multiple tokenizers instead.
 
 ### PUT sudachi_sample
+
 ```json
 {
   "settings": {
@@ -156,7 +192,7 @@ This filter works like `mode` of kuromoji.
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": ["my_searchfilter" ],
+            "filter": ["my_searchfilter"],
             "tokenizer": "sudachi_tokenizer",
             "type": "custom"
           }
@@ -173,7 +209,8 @@ This filter works like `mode` of kuromoji.
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
+
 ```json
 {
     "analyzer": "sudachi_analyzer",
@@ -181,7 +218,8 @@ This filter works like `mode` of kuromoji.
 }
 ```
 
-### Which responds with:
+Which responds with:
+
 ```json
 {
   "tokens" : [
@@ -241,6 +279,7 @@ With the `stoptags`, you can filter out the result in any of these forward match
 - 5,6 - e.g., `五段-カ行,終止形-一般`
 
 ### PUT sudachi_sample
+
 ```json
 {
   "settings": {
@@ -253,7 +292,7 @@ With the `stoptags`, you can filter out the result in any of these forward match
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [ "my_posfilter" ],
+            "filter": ["my_posfilter"],
             "tokenizer": "sudachi_tokenizer",
             "type": "custom"
           }
@@ -275,7 +314,8 @@ With the `stoptags`, you can filter out the result in any of these forward match
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
+
 ```json
 {
   "analyzer": "sudachi_analyzer",
@@ -283,7 +323,8 @@ With the `stoptags`, you can filter out the result in any of these forward match
 }
 ```
 
-### Which responds with:
+Which responds with:
+
 ```json
 {
   "tokens": [
@@ -310,6 +351,7 @@ With the `stoptags`, you can filter out the result in any of these forward match
 The sudachi\_ja\_stop token filter filters out Japanese stopwords (_japanese_), and any other custom stopwords specified by the user. This filter only supports the predefined _japanese_ stopwords list. If you want to use a different predefined list, then use the stop token filter instead.
 
 ### PUT sudachi_sample
+
 ```json
 {
   "settings": {
@@ -322,7 +364,7 @@ The sudachi\_ja\_stop token filter filters out Japanese stopwords (_japanese_), 
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [ "my_stopfilter" ],
+            "filter": ["my_stopfilter"],
             "tokenizer": "sudachi_tokenizer",
             "type": "custom"
           }
@@ -343,7 +385,8 @@ The sudachi\_ja\_stop token filter filters out Japanese stopwords (_japanese_), 
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
+
 ```json
 {
   "analyzer": "sudachi_analyzer",
@@ -351,7 +394,8 @@ The sudachi\_ja\_stop token filter filters out Japanese stopwords (_japanese_), 
 }
 ```
 
-### Which responds with:
+Which responds with:
+
 ```json
 {
   "tokens": [
@@ -397,7 +441,7 @@ The sudachi\_baseform token filter replaces terms with their SudachiBaseFormAttr
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [ "sudachi_baseform" ],
+            "filter": ["sudachi_baseform"],
             "tokenizer": "sudachi_tokenizer",
             "type": "custom"
           }
@@ -408,7 +452,8 @@ The sudachi\_baseform token filter replaces terms with their SudachiBaseFormAttr
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
+
 ```json
 {
   "analyzer": "sudachi_analyzer",
@@ -416,7 +461,8 @@ The sudachi\_baseform token filter replaces terms with their SudachiBaseFormAttr
 }
 ```
 
-### Which responds with:
+Which responds with:
+
 ```json
 {
   "tokens": [
@@ -438,6 +484,7 @@ The sudachi\_normalizedform token filter replaces terms with their SudachiNormal
 This filter lemmatizes verbs and adjectives too. You don't need to use sudachi\_baseform filter with this filter.
 
 ### PUT sudachi_sample
+
 ```json
 {
   "settings": {
@@ -450,7 +497,7 @@ This filter lemmatizes verbs and adjectives too. You don't need to use sudachi\_
         },
         "analyzer": {
           "sudachi_analyzer": {
-            "filter": [ "sudachi_normalizedform" ],
+            "filter": ["sudachi_normalizedform"],
             "tokenizer": "sudachi_tokenizer",
             "type": "custom"
           }
@@ -461,7 +508,8 @@ This filter lemmatizes verbs and adjectives too. You don't need to use sudachi\_
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
+
 ```json
 {
   "analyzer": "sudachi_analyzer",
@@ -469,7 +517,8 @@ This filter lemmatizes verbs and adjectives too. You don't need to use sudachi\_
 }
 ```
 
-### Which responds with:
+Which responds with:
+
 ```json
 {
   "tokens": [
@@ -496,6 +545,7 @@ Whether romaji reading form should be output instead of katakana. Defaults to fa
 When using the pre-defined sudachi_readingform filter, use_romaji is set to true. The default when defining a custom sudachi_readingform, however, is false. The only reason to use the custom form is if you need the katakana reading form:
 
 ### PUT sudachi_sample
+
 ```json
 {
   "settings": {
@@ -519,11 +569,11 @@ When using the pre-defined sudachi_readingform filter, use_romaji is set to true
         "analyzer": {
           "romaji_analyzer": {
             "tokenizer": "sudachi_tokenizer",
-            "filter": [ "romaji_readingform" ]
+            "filter": ["romaji_readingform"]
           },
           "katakana_analyzer": {
             "tokenizer": "sudachi_tokenizer",
-            "filter": [ "katakana_readingform" ]
+            "filter": ["katakana_readingform"]
           }
         }
       }
@@ -532,7 +582,7 @@ When using the pre-defined sudachi_readingform filter, use_romaji is set to true
 }
 ```
 
-### POST sudachi_sample
+### POST sudachi_sample/_analyze
 
 ```json
 {
@@ -540,14 +590,16 @@ When using the pre-defined sudachi_readingform filter, use_romaji is set to true
   "text": "寿司"
 }
 ```
+
 Returns `スシ`.
 
-```
+```json
 {
   "analyzer": "romaji_analyzer",
   "text": "寿司"
 }
 ```
+
 Returns `susi`.
 
 # License
