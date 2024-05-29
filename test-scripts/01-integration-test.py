@@ -191,5 +191,54 @@ class TestSecurityManager(unittest.TestCase):
         return
 
 
+class TestWithCommonFilter(unittest.TestCase):
+    def test_synonym_then_normalizedform(self):
+        body = {
+            "tokenizer": {
+                "type": "sudachi_tokenizer",
+            },
+            "filter": [
+                {
+                    "type": "synonym_graph",
+                    "synonyms": ["すだち, みかん"]
+                },
+                "sudachi_normalizedform",
+            ],
+            "text": "すだちを食べた",
+        }
+        resp = es_instance.analyze(body)
+        self.assertEqual(200, resp.status, f"data: {resp.data}")
+
+        tokens = json.loads(resp.data)["tokens"]
+        # synonym filter inserts synonym beforehand.
+        # it is not normalized since it does not have morpheme.
+        self.assertListEqual(["みかん", "酢橘", "を", "食べる", "た"],
+                             [t["token"] for t in tokens])
+        return
+
+    def test_normalizedform_then_synonym(self):
+        body = {
+            "tokenizer": {
+                "type": "sudachi_tokenizer",
+            },
+            "filter": [
+                "sudachi_normalizedform",
+                {
+                    "type": "synonym_graph",
+                    "synonyms": ["すだち, みかん"]
+                },
+            ],
+            "text": "すだちを食べた",
+        }
+        resp = es_instance.analyze(body)
+        self.assertEqual(200, resp.status, f"data: {resp.data}")
+
+        tokens = json.loads(resp.data)["tokens"]
+        # "みかん" is normalized since synonym filter uses filters before it to parse synonym.
+        self.assertListEqual(["蜜柑", "酢橘", "を", "食べる", "た"],
+                             [t["token"] for t in tokens])
+        return
+
+
 if __name__ == "__main__":
     main()

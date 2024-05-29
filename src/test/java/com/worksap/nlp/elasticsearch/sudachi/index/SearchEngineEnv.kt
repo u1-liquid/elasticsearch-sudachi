@@ -54,11 +54,6 @@ class SearchEngineEnv(vararg components: String = arrayOf("system")) : ExternalR
     settings.forEach { (key: String?, value: String?) -> builder.put(key, value) }
     builder.put(MetadataConstants.SETTING_VERSION_CREATED, Version.CURRENT)
     val indexSettings = builder.build()
-    val nodeSettings =
-        Settings.builder().put(Environment.PATH_HOME_SETTING.key, testDic.root.path).build()
-    val env = TestEnvironment.newEnvironment(nodeSettings)
-    val analysisModule = makeAnalysisModule(env, AnalysisSudachiPlugin(nodeSettings))
-    val analysisRegistry = analysisModule.analysisRegistry
     return analysisRegistry.buildTokenizerFactories(
         IndexSettingsModule.newIndexSettings(Index("test", "_na_"), indexSettings))
   }

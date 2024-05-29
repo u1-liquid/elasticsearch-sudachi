@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2017-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ class TestSudachiAnalyzer {
       val scoreDoc = scoreDocs[0]
       val docId = scoreDoc.doc
       MatcherAssert.assertThat(docId, CoreMatchers.`is`(0))
-      val doc = searcher.doc(docId)
+      val doc = getDocumentFromSearcher(searcher, docId)
       val values = doc.getValues(FIELD_NAME)
       MatcherAssert.assertThat(values.size, CoreMatchers.`is`(1))
       MatcherAssert.assertThat(values[0], CoreMatchers.`is`(INPUT_TEXT))

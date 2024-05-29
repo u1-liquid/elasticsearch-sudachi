@@ -21,7 +21,10 @@ compileTestKotlin {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
 }
 
+configurations { buildSudachiDict }
+
 dependencies {
+    buildSudachiDict (project(':spi'))
     compileOnly(project(':'))
     compileOnly(project(':spi'))
     testCompileOnly(project(':testlib'))
@@ -36,7 +39,7 @@ dependencies {
 }
 
 def compileSystemDictionary = tasks.register("compileTestDictionary", JavaExec) {
-    classpath = project(":spi").sourceSets.main.compileClasspath
+    classpath = configurations.buildSudachiDict
     mainClass = "com.worksap.nlp.sudachi.dictionary.DictionaryBuilder"
     defaultCharacterEncoding = "utf-8"
     def dictRoot = rootProject.file("src/test/resources/dict").toPath()
