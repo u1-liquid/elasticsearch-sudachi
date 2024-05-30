@@ -17,9 +17,7 @@
 package com.worksap.nlp.lucene.sudachi.ja
 
 import com.worksap.nlp.lucene.sudachi.ja.attributes.MorphemeAttribute
-import com.worksap.nlp.lucene.sudachi.ja.attributes.MorphemeConsumerAttribute
 import com.worksap.nlp.sudachi.Morpheme
-import org.apache.logging.log4j.LogManager
 import org.apache.lucene.analysis.TokenFilter
 import org.apache.lucene.analysis.TokenStream
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
@@ -39,8 +37,6 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
   @JvmField protected val morphemeAtt = existingAttribute<MorphemeAttribute>()
   @JvmField protected val keywordAtt = addAttribute<KeywordAttribute>()
   @JvmField protected val termAtt = addAttribute<CharTermAttribute>()
-  @JvmField
-  protected val consumer = addAttribute<MorphemeConsumerAttribute> { it.currentConsumer = this }
 
   /**
    * Override this method to customize returned value. This method will not be called if
@@ -63,17 +59,5 @@ abstract class MorphemeFieldFilter(input: TokenStream) : TokenFilter(input) {
     termAtt.setEmpty().append(term)
 
     return true
-  }
-
-  override fun reset() {
-    super.reset()
-    if (!consumer.shouldConsume(this)) {
-      logger.warn(
-          "an instance of ${javaClass.name} is a no-op, it is not a filter which produces terms in one of your filter chains")
-    }
-  }
-
-  companion object {
-    private val logger = LogManager.getLogger(MorphemeFieldFilter::class.java)
   }
 }

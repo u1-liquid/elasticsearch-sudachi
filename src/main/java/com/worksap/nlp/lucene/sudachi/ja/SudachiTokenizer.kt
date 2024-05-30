@@ -17,7 +17,6 @@
 package com.worksap.nlp.lucene.sudachi.ja
 
 import com.worksap.nlp.lucene.sudachi.ja.attributes.MorphemeAttribute
-import com.worksap.nlp.lucene.sudachi.ja.attributes.MorphemeConsumerAttribute
 import com.worksap.nlp.lucene.sudachi.ja.attributes.SudachiAttribute
 import com.worksap.nlp.lucene.sudachi.ja.attributes.SudachiAttributeFactory
 import org.apache.lucene.analysis.Tokenizer
@@ -37,7 +36,6 @@ class SudachiTokenizer(
   private val offsetAtt = addAttribute<OffsetAttribute>()
   private val posIncAtt = addAttribute<PositionIncrementAttribute>()
   private val posLenAtt = addAttribute<PositionLengthAttribute>()
-  private val consumer = addAttribute<MorphemeConsumerAttribute> { it.currentConsumer = this }
 
   init {
     addAttribute<SudachiAttribute> { it.dictionary = tokenizer.dictionary }

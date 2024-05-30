@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Works Applications Co., Ltd.
+ * Copyright (c) 2023-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ class SudachiAttributeFactory(private val parent: AttributeFactory) : AttributeF
   override fun createAttributeInstance(attClass: Class<out Attribute>?): AttributeImpl {
     return when (attClass) {
       MorphemeAttribute::class.java -> MorphemeAttributeImpl()
-      MorphemeConsumerAttribute::class.java -> MorphemeConsumerAttributeImpl()
       SudachiAttribute::class.java -> SudachiAttributeImpl()
       else -> parent.createAttributeInstance(attClass)
     }
