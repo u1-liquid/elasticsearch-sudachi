@@ -7,8 +7,11 @@ analysis-sudachi is an Elasticsearch plugin for tokenization of Japanese text us
 
 # What's new?
 
-- [3.1.1]
-  - Support ElasticSearch -8.13.4 and OpenSearch -2.14.0. (#114, #118)
+- [3.2.0]
+  - Explain with morpheme attribute (#121)
+  - Synonym filter and Sudachi filters can be used in any order (#122)
+  - MorphemeConsumerAttribute is removed (#127)
+    - This changes the interface of SPI. You can just remove MorphemeConsumerAttribute related code to migrate.
 
 Check [changelog](./CHANGELOG.md) for more.
 
