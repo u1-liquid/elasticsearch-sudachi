@@ -63,7 +63,7 @@ If you want to update Sudachi that is included in a plugin you have installed, d
 
 # Analyzer
 
-An analyzer named "sudachi" is provided.
+An analyzer `sudachi` is provided.
 This is equivalent to the following custom analyzer.
 
 ```json
@@ -91,6 +91,8 @@ This is equivalent to the following custom analyzer.
 See following sections for the detail of the tokenizer and each filters.
 
 # Tokenizer
+
+The `sudachi_tokenizer` tokenizer tokenizes input texts using Sudachi.
 
 - split_mode: Select splitting mode of Sudachi. (A, B, C) (string, default: C)
   - C: Extracts named entities
@@ -168,7 +170,7 @@ dictionary settings
 
 ## sudachi\_split
 
-This filter works like `mode` of kuromoji.
+The `sudachi_split` token filter works like `mode` of kuromoji.
 
 - mode
   - "search": Additional segmentation useful for search. (Use C and A mode)
@@ -258,7 +260,7 @@ Which responds with:
 
 ## sudachi\_part\_of\_speech
 
-The sudachi\_part\_of\_speech token filter removes tokens that match a set of part-of-speech tags. It accepts the following setting:
+The `sudachi_part_of_speech` token filter removes tokens that match a set of part-of-speech tags. It accepts the following setting:
 
 The `stoptags` is an array of part-of-speech and/or inflection tags that should be removed. It defaults to the stoptags.txt file embedded in the lucene-analysis-sudachi.jar.
 
@@ -348,7 +350,7 @@ Which responds with:
 
 ## sudachi\_ja\_stop
 
-The sudachi\_ja\_stop token filter filters out Japanese stopwords (_japanese_), and any other custom stopwords specified by the user. This filter only supports the predefined _japanese_ stopwords list. If you want to use a different predefined list, then use the stop token filter instead.
+The `sudachi_ja_stop` token filter filters out Japanese stopwords (_japanese_), and any other custom stopwords specified by the user. This filter only supports the predefined _japanese_ stopwords list. If you want to use a different predefined list, then use the stop token filter instead.
 
 ### PUT sudachi_sample
 
@@ -426,7 +428,9 @@ Which responds with:
 
 ## sudachi\_baseform
 
-The sudachi\_baseform token filter replaces terms with their SudachiBaseFormAttribute. This acts as a lemmatizer for verbs and adjectives.
+The `sudachi_baseform` token filter replaces terms with their Sudachi dictionary form. This acts as a lemmatizer for verbs and adjectives.
+
+This will be overridden by `sudachi_split`, `sudachi_normalizedform` or `sudachi_readingform` token filters.
 
 ### PUT sudachi_sample
 ```json
@@ -479,9 +483,10 @@ Which responds with:
 
 ## sudachi\_normalizedform
 
-The sudachi\_normalizedform token filter replaces terms with their SudachiNormalizedFormAttribute. This acts as a normalizer for spelling variants.
+The `sudachi_normalizedform` token filter replaces terms with their Sudachi normalized form. This acts as a normalizer for spelling variants.
+This filter lemmatizes verbs and adjectives too. You don't need to use `sudachi_baseform` filter with this filter.
 
-This filter lemmatizes verbs and adjectives too. You don't need to use sudachi\_baseform filter with this filter.
+This will be overridden by `sudachi_split`, `sudachi_baseform` or `sudachi_readingform` token filters.
 
 ### PUT sudachi_sample
 
@@ -535,14 +540,14 @@ Which responds with:
 
 ## sudachi\_readingform
 
-Convert to katakana or romaji reading.
-The sudachi\_readingform token filter replaces the token with its reading form in either katakana or romaji. It accepts the following setting:
+The `sudachi_readingform` token filter replaces the terms with their reading form in either katakana or romaji.
 
-### use_romaji
+This will be overridden by `sudachi_split`, `sudachi_baseform` or `sudachi_normalizedform` token filters.
 
-Whether romaji reading form should be output instead of katakana. Defaults to false.
+Accepts the following setting:
 
-When using the pre-defined sudachi_readingform filter, use_romaji is set to true. The default when defining a custom sudachi_readingform, however, is false. The only reason to use the custom form is if you need the katakana reading form:
+- use_romaji
+  - Whether romaji reading form should be output instead of katakana. Defaults to false.
 
 ### PUT sudachi_sample
 

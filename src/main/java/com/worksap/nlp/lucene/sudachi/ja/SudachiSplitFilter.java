@@ -86,7 +86,6 @@ public class SudachiSplitFilter extends TokenFilter {
     private final PositionIncrementAttribute posIncAtt;
     private final PositionLengthAttribute posLengthAtt;
     private final MorphemeAttribute morphemeAtt;
-    private final MorphemeConsumerAttribute consumerAttribute;
     private ListIterator<Morpheme> aUnitIterator;
     private final OovChars oovChars = new OovChars();
 
@@ -102,8 +101,6 @@ public class SudachiSplitFilter extends TokenFilter {
         posIncAtt = addAttribute(PositionIncrementAttribute.class);
         posLengthAtt = addAttribute(PositionLengthAttribute.class);
         morphemeAtt = addAttribute(MorphemeAttribute.class);
-        consumerAttribute = addAttribute(MorphemeConsumerAttribute.class);
-        consumerAttribute.setCurrentConsumer(this);
     }
 
     @Override
