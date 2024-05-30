@@ -260,7 +260,7 @@ Which responds with:
 
 The sudachi\_part\_of\_speech token filter removes tokens that match a set of part-of-speech tags. It accepts the following setting:
 
-The `stopatgs` is an array of part-of-speech and/or inflection tags that should be removed. It defaults to the stoptags.txt file embedded in the lucene-analysis-sudachi.jar.
+The `stoptags` is an array of part-of-speech and/or inflection tags that should be removed. It defaults to the stoptags.txt file embedded in the lucene-analysis-sudachi.jar.
 
 Sudachi POS information is a csv list, consisting 6 items;
 
