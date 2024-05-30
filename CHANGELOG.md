@@ -1,5 +1,23 @@
 # Change log
 
+## [3.2.0] - 2024-05-30
+
+### Added
+
+- Update documents including tutrial (#125, #126)
+
+### Fixed
+
+- Explain with morpheme attribute (#121)
+- Synonym filter and Sudachi filters can be used in any order (#122)
+- Update deprecated codes (#125)
+
+### Removed
+
+- MorphemeConsumerAttribute is removed (#127)
+  - This changes the interface of SPI. You can just remove MorphemeConsumerAttribute related code to migrate.
+  - Also see #123 and #124.
+
 ## [3.1.1] - 2024-05-17
 
 ### Added
