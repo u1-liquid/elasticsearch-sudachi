@@ -39,7 +39,6 @@ jobs:
           - 'os:2.6.0'
     env:
       mainJob: ${{ matrix.es-version == 'es:8.13.4' }}
-      githubRef: ${{ github.ref }}
     continue-on-error: true
     steps:
     - uses: actions/checkout@v4
@@ -117,7 +116,7 @@ jobs:
       name: Upload reports when failed
       if: failure()
       with:
-        name: failure-reports-${{ matrix.es-version }}
+        name: failure-reports-${{ env.ENGINE_KIND }}-${{ env.ENGINE_VERSION }}
         path: |
           build/reports
           build/integration/elasticsearch-*/logs
@@ -125,14 +124,14 @@ jobs:
       name: Upload built packages
       if: success()
       with:
-        name: build-artifacts-${{ matrix.es-version }}
+        name: build-artifacts-${{ env.ENGINE_KIND }}-${{ env.ENGINE_VERSION }}
         path: |
           build/distributions/*.zip
     - uses: actions/upload-artifact@v4
       name: Upload SPI jar
       if: env.mainJob == 'true'
       with:
-        name: build-artifacts-spi-${{ matrix.es-version }}
+        name: build-artifacts-spi-${{ env.ENGINE_KIND }}-${{ env.ENGINE_VERSION }}
         path: |
           spi/build/libs/sudachi-*.jar
     - name: 'Publish SPI jar to maven central'
