@@ -25,6 +25,8 @@ import org.apache.lucene.analysis.tokenattributes.OffsetAttribute
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute
 import org.apache.lucene.util.AttributeFactory
+import java.io.StringReader
+import java.nio.CharBuffer
 
 class SudachiTokenizer(
     private val tokenizer: CachingTokenizer,
@@ -45,16 +47,31 @@ class SudachiTokenizer(
 
   override fun reset() {
     super.reset()
-    var iter = tokenizer.tokenize(input)
-    if (discardPunctuation) {
-      iter = NonPunctuationMorphemes(iter)
-    }
-    iterator = iter
+    iterator = MorphemeIterator.EMPTY
   }
 
   override fun incrementToken(): Boolean {
     clearAttributes()
-    val m = iterator.next() ?: return false
+
+    var m = iterator.next()
+    if (m == null) {
+      // Create 1MB chunk
+      // TODO: Should split with meaningful delimitations.
+      val buffer = CharBuffer.allocate(1*1024*1024)
+      val nread = input.read(buffer)
+      if (nread < 0) {
+        return false
+      }
+      buffer.flip()
+
+      var iter = tokenizer.tokenize(StringReader(buffer.toString()))
+      if (discardPunctuation) {
+        iter = NonPunctuationMorphemes(iter)
+      }
+      iterator = iter
+      m = iterator.next() ?: return false
+    }
+
     morphemeAtt.setMorpheme(m)
     posLenAtt.positionLength = 1
     posIncAtt.positionIncrement = 1

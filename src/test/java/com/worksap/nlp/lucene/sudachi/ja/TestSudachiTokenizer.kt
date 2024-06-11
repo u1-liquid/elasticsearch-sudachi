@@ -25,13 +25,16 @@ import com.worksap.nlp.sudachi.Config
 import com.worksap.nlp.sudachi.PathAnchor
 import com.worksap.nlp.sudachi.Tokenizer.SplitMode
 import com.worksap.nlp.test.TestDictionary
-import java.io.StringReader
 import org.apache.lucene.analysis.charfilter.MappingCharFilter
 import org.apache.lucene.analysis.charfilter.NormalizeCharMap
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.apache.lucene.util.AttributeFactory
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.io.StringReader
+
 
 // Test of character segmentation using incrementToken(tokenizer)
 open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
@@ -284,5 +287,28 @@ open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
     val tokenizerB = makeTokenizer(SplitMode.B, true)
     assertNotEquals(tokenizerA, tokenizerB)
     assertNotEquals(tokenizerA.hashCode().toLong(), tokenizerB.hashCode().toLong())
+  }
+
+
+  @Test
+  fun hugeCharactersByDefaultMode() {
+    val tokenizer = makeTokenizer(SplitMode.C)
+    //tokenizer.setReader(StringReader("東京都に行った。"))
+
+    val charLength = 10*1024*1024
+    tokenizer.setReader(StringReader("あ".repeat(charLength)))
+
+    val charTermAttribute = tokenizer.addAttribute(
+        CharTermAttribute::class.java,
+    )
+    tokenizer.reset()
+
+    var totalLength = 0
+    while(tokenizer.incrementToken()) {
+      //println(charTermAttribute.toString())
+      totalLength += charTermAttribute.length
+    }
+
+    Assert.assertEquals(charLength, totalLength)
   }
 }
