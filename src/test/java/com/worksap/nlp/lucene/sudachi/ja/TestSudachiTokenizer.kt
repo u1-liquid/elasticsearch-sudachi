@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2017-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.worksap.nlp.sudachi.Config
 import com.worksap.nlp.sudachi.PathAnchor
 import com.worksap.nlp.sudachi.Tokenizer.SplitMode
 import com.worksap.nlp.test.TestDictionary
+import java.io.StringReader
 import org.apache.lucene.analysis.charfilter.MappingCharFilter
 import org.apache.lucene.analysis.charfilter.NormalizeCharMap
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
@@ -33,8 +34,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.io.StringReader
-
 
 // Test of character segmentation using incrementToken(tokenizer)
 open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
@@ -289,23 +288,22 @@ open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
     assertNotEquals(tokenizerA.hashCode().toLong(), tokenizerB.hashCode().toLong())
   }
 
-
   @Test
   fun hugeCharactersByDefaultMode() {
     val tokenizer = makeTokenizer(SplitMode.C)
-    //tokenizer.setReader(StringReader("東京都に行った。"))
 
-    val charLength = 10*1024*1024
+    val charLength = 10 * 1024 * 1024
     tokenizer.setReader(StringReader("あ".repeat(charLength)))
 
-    val charTermAttribute = tokenizer.addAttribute(
-        CharTermAttribute::class.java,
-    )
+    val charTermAttribute =
+        tokenizer.addAttribute(
+            CharTermAttribute::class.java,
+        )
     tokenizer.reset()
 
     var totalLength = 0
-    while(tokenizer.incrementToken()) {
-      //println(charTermAttribute.toString())
+    while (tokenizer.incrementToken()) {
+      // println(charTermAttribute.toString())
       totalLength += charTermAttribute.length
     }
 
