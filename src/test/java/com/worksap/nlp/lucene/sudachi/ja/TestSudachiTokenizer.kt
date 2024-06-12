@@ -29,6 +29,7 @@ import java.io.StringReader
 import org.apache.lucene.analysis.charfilter.MappingCharFilter
 import org.apache.lucene.analysis.charfilter.NormalizeCharMap
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute
 import org.apache.lucene.util.AttributeFactory
 import org.junit.Assert
 import org.junit.Before
@@ -295,18 +296,21 @@ open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
     val charLength = 10 * 1024 * 1024
     tokenizer.setReader(StringReader("あ".repeat(charLength)))
 
-    val charTermAttribute =
-        tokenizer.addAttribute(
-            CharTermAttribute::class.java,
-        )
+    val charTermAttribute = tokenizer.getAttribute(CharTermAttribute::class.java)
+    val offsetAttribute: OffsetAttribute = tokenizer.getAttribute(OffsetAttribute::class.java)
+
     tokenizer.reset()
 
     var totalLength = 0
+    var prevEndOffset = 0
     while (tokenizer.incrementToken()) {
-      // println(charTermAttribute.toString())
+      Assert.assertEquals(prevEndOffset, offsetAttribute.startOffset())
+
+      prevEndOffset = offsetAttribute.endOffset()
       totalLength += charTermAttribute.length
     }
 
     Assert.assertEquals(charLength, totalLength)
+    Assert.assertEquals(charLength, prevEndOffset)
   }
 }

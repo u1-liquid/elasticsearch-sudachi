@@ -44,10 +44,14 @@ class SudachiTokenizer(
   }
 
   private var iterator: MorphemeIterator = MorphemeIterator.EMPTY
+  private var offset = 0
+  private var endOffset = 0
 
   override fun reset() {
     super.reset()
     iterator = MorphemeIterator.EMPTY
+    offset = 0 // pos from the beginning to current chunk.
+    endOffset = 0
   }
 
   override fun incrementToken(): Boolean {
@@ -55,9 +59,10 @@ class SudachiTokenizer(
 
     var m = iterator.next()
     if (m == null) {
-      // Create 1MB chunk
-      // TODO: Should split with meaningful delimitations.
-      val buffer = CharBuffer.allocate(1 * 1024 * 1024)
+      // To cope with huge text, it split into chunks (1 MB) for tokenize.
+      // TODO: Should split with meaningful delimitations instead of fixed size (1 MB).
+      val buffer = CharBuffer.allocate(1024)
+      // val buffer = CharBuffer.allocate(1 * 1024 * 1024)
       val nread = input.read(buffer)
       if (nread < 0) {
         return false
@@ -69,21 +74,27 @@ class SudachiTokenizer(
         iter = NonPunctuationMorphemes(iter)
       }
       iterator = iter
+      offset = endOffset
+
       m = iterator.next() ?: return false
     }
 
     morphemeAtt.setMorpheme(m)
     posLenAtt.positionLength = 1
     posIncAtt.positionIncrement = 1
-    val baseOffset = iterator.baseOffset
-    offsetAtt.setOffset(correctOffset(baseOffset + m.begin()), correctOffset(baseOffset + m.end()))
+    val baseOffset = iterator.baseOffset // offset in this chunk
+    offsetAtt.setOffset(
+        correctOffset(offset + baseOffset + m.begin()),
+        correctOffset(offset + baseOffset + m.end()))
+    endOffset = offset + baseOffset + m.end()
+
     termAtt.setEmpty().append(m.surface())
     return true
   }
 
   override fun end() {
     super.end()
-    val lastOffset = correctOffset(iterator.baseOffset)
+    val lastOffset = correctOffset(offset + iterator.baseOffset)
     offsetAtt.setOffset(lastOffset, lastOffset)
     iterator = MorphemeIterator.EMPTY
   }
