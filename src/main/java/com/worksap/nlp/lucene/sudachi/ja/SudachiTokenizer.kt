@@ -19,6 +19,7 @@ package com.worksap.nlp.lucene.sudachi.ja
 import com.worksap.nlp.lucene.sudachi.ja.attributes.MorphemeAttribute
 import com.worksap.nlp.lucene.sudachi.ja.attributes.SudachiAttribute
 import com.worksap.nlp.lucene.sudachi.ja.attributes.SudachiAttributeFactory
+import com.worksap.nlp.sudachi.IOTools
 import java.io.StringReader
 import java.nio.CharBuffer
 import org.apache.lucene.analysis.Tokenizer
@@ -61,9 +62,8 @@ class SudachiTokenizer(
     if (m == null) {
       // To cope with huge text, it split into chunks (1 MB) for tokenize.
       // TODO: Should split with meaningful delimitations instead of fixed size (1 MB).
-      val buffer = CharBuffer.allocate(1024)
-      // val buffer = CharBuffer.allocate(1 * 1024 * 1024)
-      val nread = input.read(buffer)
+      val buffer = CharBuffer.allocate(1 * 1024 * 1024)
+      val nread = IOTools.readAsMuchAsCan(input, buffer)
       if (nread < 0) {
         return false
       }
