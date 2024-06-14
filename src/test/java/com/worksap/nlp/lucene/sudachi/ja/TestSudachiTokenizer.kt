@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2017-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,10 @@ import com.worksap.nlp.test.TestDictionary
 import java.io.StringReader
 import org.apache.lucene.analysis.charfilter.MappingCharFilter
 import org.apache.lucene.analysis.charfilter.NormalizeCharMap
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute
 import org.apache.lucene.util.AttributeFactory
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -284,5 +287,30 @@ open class TestSudachiTokenizer : BaseTokenStreamTestCase() {
     val tokenizerB = makeTokenizer(SplitMode.B, true)
     assertNotEquals(tokenizerA, tokenizerB)
     assertNotEquals(tokenizerA.hashCode().toLong(), tokenizerB.hashCode().toLong())
+  }
+
+  @Test
+  fun hugeCharactersByDefaultMode() {
+    val tokenizer = makeTokenizer(SplitMode.C)
+
+    val charLength = 10 * 1024 * 1024
+    tokenizer.setReader(StringReader("あ".repeat(charLength)))
+
+    val charTermAttribute = tokenizer.getAttribute(CharTermAttribute::class.java)
+    val offsetAttribute: OffsetAttribute = tokenizer.getAttribute(OffsetAttribute::class.java)
+
+    tokenizer.reset()
+
+    var totalLength = 0
+    var prevEndOffset = 0
+    while (tokenizer.incrementToken()) {
+      Assert.assertEquals(prevEndOffset, offsetAttribute.startOffset())
+
+      prevEndOffset = offsetAttribute.endOffset()
+      totalLength += charTermAttribute.length
+    }
+
+    Assert.assertEquals(charLength, totalLength)
+    Assert.assertEquals(charLength, prevEndOffset)
   }
 }
