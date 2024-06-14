@@ -29,6 +29,10 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute
 import org.apache.lucene.util.AttributeFactory
 
+private val MAX_CHUNK_SIZE = 1 * 1024 * 1024
+private val INITIAL_CHUNK_SIZE = 32 * 1024
+private val CHUNK_GROW_SCALE = 8
+
 class SudachiTokenizer(
     private val tokenizer: CachingTokenizer,
     private val discardPunctuation: Boolean,
@@ -44,15 +48,52 @@ class SudachiTokenizer(
     addAttribute<SudachiAttribute> { it.dictionary = tokenizer.dictionary }
   }
 
+  // To cope with huge text, input data split into chunks for tokenize.
+  // Initial chunk size is INITIAL_CHUNK_SIZE.
+  // But it grows, if input data is large (up to MAX_CHUNK_SIZE).
+  // TODO: Should split with meaningful delimitations instead of fixed size.
+  private var chunk: CharBuffer = CharBuffer.allocate(INITIAL_CHUNK_SIZE)
   private var iterator: MorphemeIterator = MorphemeIterator.EMPTY
-  private var offset = 0
+  private var offset = 0 // pos from the beginning to current chunk.
   private var endOffset = 0
 
   override fun reset() {
     super.reset()
     iterator = MorphemeIterator.EMPTY
-    offset = 0 // pos from the beginning to current chunk.
+    offset = 0
     endOffset = 0
+  }
+
+  private fun growChunk() {
+    val newChunkSize = kotlin.math.min(chunk.capacity() * CHUNK_GROW_SCALE, MAX_CHUNK_SIZE)
+    val newChunk = CharBuffer.allocate(newChunkSize)
+    chunk.flip()
+    newChunk.put(chunk)
+
+    chunk = newChunk
+  }
+
+  private fun read(): Boolean {
+    chunk.clear()
+
+    while (true) {
+      val nread = IOTools.readAsMuchAsCan(input, chunk)
+      if (nread < 0) {
+        return chunk.position() > 0
+      }
+
+      // check: chunk reads all data from Reader. No remaining data in Reader.
+      if (chunk.hasRemaining()) {
+        return true
+      }
+
+      // check: chunk is already max size
+      if (chunk.capacity() == MAX_CHUNK_SIZE) {
+        return true
+      }
+
+      growChunk()
+    }
   }
 
   override fun incrementToken(): Boolean {
@@ -60,16 +101,12 @@ class SudachiTokenizer(
 
     var m = iterator.next()
     if (m == null) {
-      // To cope with huge text, it split into chunks (1 MB) for tokenize.
-      // TODO: Should split with meaningful delimitations instead of fixed size (1 MB).
-      val buffer = CharBuffer.allocate(1 * 1024 * 1024)
-      val nread = IOTools.readAsMuchAsCan(input, buffer)
-      if (nread < 0) {
+      if (!read()) {
         return false
       }
-      buffer.flip()
+      chunk.flip()
 
-      var iter = tokenizer.tokenize(StringReader(buffer.toString()))
+      var iter = tokenizer.tokenize(StringReader(chunk.toString()))
       if (discardPunctuation) {
         iter = NonPunctuationMorphemes(iter)
       }
