@@ -1,5 +1,19 @@
 # Change log
 
+## [Unreleased]
+
+## [3.2.1] - 2024-06-14
+
+### Fixed
+
+- Fix OOM error with a huge document (#132)
+  - Plugin now handles huge documents splitting into relatively small (1M char) chunks.
+  - Analysis may be broken around the edge of chunks (open issue, see #131)
+
+### Added
+
+- Add tutorial to use [Sudachi synonym dictionary](https://github.com/WorksApplications/SudachiDict/blob/develop/docs/synonyms.md) (#65)
+
 ## [3.2.0] - 2024-05-30
 
 ### Added
