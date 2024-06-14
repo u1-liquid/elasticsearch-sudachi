@@ -7,11 +7,11 @@ analysis-sudachi is an Elasticsearch plugin for tokenization of Japanese text us
 
 # What's new?
 
-- [3.2.0]
-  - Explain with morpheme attribute (#121)
-  - Synonym filter and Sudachi filters can be used in any order (#122)
-  - MorphemeConsumerAttribute is removed (#127)
-    - This changes the interface of SPI. You can just remove MorphemeConsumerAttribute related code to migrate.
+- [3.2.1]
+  - Fix OOM error with a huge document (#132)
+      - Plugin now handles huge documents splitting into relatively small (1M char) chunks.
+      - Analysis may be broken around the edge of chunks (open issue, see #131)
+  - Add tutorial to use [Sudachi synonym dictionary](https://github.com/WorksApplications/SudachiDict/blob/develop/docs/synonyms.md) (#65)
 
 Check [changelog](./CHANGELOG.md) for more.
 
