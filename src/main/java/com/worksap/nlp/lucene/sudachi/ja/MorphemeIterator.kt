@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2022-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ class NonCachedAnalysis(tokenizer: Tokenizer, input: Reader, splitMode: SplitMod
     override fun next() = throw IllegalStateException()
   }
 
-  private val sentenceIterator = tokenizer.tokenizeSentences(splitMode, input).iterator()
+  private val sentenceIterator = tokenizer.lazyTokenizeSentences(splitMode, input)
   private var morphemeIterator: Iterator<Morpheme> = EmptyIterator
   private var currentLength = 0
 
