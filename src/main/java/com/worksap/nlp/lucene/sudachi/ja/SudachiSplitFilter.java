@@ -127,12 +127,14 @@ public class SudachiSplitFilter extends TokenFilter {
             return true;
         }
 
-        // split oov into charactor
-        int length = 0;
-        termAtt.setEmpty().append(m.surface());
-        if (mode == Mode.EXTENDED && m.isOOV() && (length = Strings.codepointCount(termAtt)) > 1) {
-            oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
-            posLengthAtt.setPositionLength(length);
+        // oov does not have splits
+        // split into characters in extended mode
+        if (m.isOOV()) {
+            int length = 0;
+            if (mode == Mode.EXTENDED && (length = Strings.codepointCount(termAtt)) > 1) {
+                oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
+                posLengthAtt.setPositionLength(length);
+            }
             return true;
         }
 
@@ -140,14 +142,12 @@ public class SudachiSplitFilter extends TokenFilter {
             return true;
         }
 
-        // split into A/B unit
+        // split into A/B units
         List<Morpheme> subUnits = m.split(splitMode);
         if (subUnits.size() > 1) {
             aUnitIterator = subUnits.listIterator();
             aUnitOffset = offsetAtt.startOffset();
             posLengthAtt.setPositionLength(subUnits.size());
-        } else {
-            posLengthAtt.setPositionLength(1);
         }
 
         return true;
