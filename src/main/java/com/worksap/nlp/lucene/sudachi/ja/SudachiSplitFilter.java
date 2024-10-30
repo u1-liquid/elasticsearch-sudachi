@@ -105,6 +105,7 @@ public class SudachiSplitFilter extends TokenFilter {
 
     @Override
     public final boolean incrementToken() throws IOException {
+        // continue to write current split
         if (oovChars.hasNext()) {
             clearAttributes();
             setOOVAttribute();
@@ -116,30 +117,40 @@ public class SudachiSplitFilter extends TokenFilter {
             return true;
         }
 
-        if (input.incrementToken()) {
-            int length = 0;
-            Morpheme m = morphemeAtt.getMorpheme();
-            if (m == null) {
-                return true;
-            }
-            termAtt.setEmpty().append(m.surface());
-            if (mode == Mode.EXTENDED && m.isOOV() && (length = Strings.codepointCount(termAtt)) > 1) {
-                oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
-                posLengthAtt.setPositionLength(length);
-            } else if (splitMode != Tokenizer.SplitMode.C) {
-                List<Morpheme> subUnits = m.split(splitMode);
-                if (subUnits.size() > 1) {
-                    aUnitIterator = subUnits.listIterator();
-                    aUnitOffset = offsetAtt.startOffset();
-                    posLengthAtt.setPositionLength(subUnits.size());
-                } else {
-                    posLengthAtt.setPositionLength(1);
-                }
-            }
-            return true;
-        } else {
+        // move to next morpheme
+        if (!input.incrementToken()) {
             return false;
         }
+
+        Morpheme m = morphemeAtt.getMorpheme();
+        if (m == null) {
+            return true;
+        }
+
+        // split oov into charactor
+        int length = 0;
+        termAtt.setEmpty().append(m.surface());
+        if (mode == Mode.EXTENDED && m.isOOV() && (length = Strings.codepointCount(termAtt)) > 1) {
+            oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
+            posLengthAtt.setPositionLength(length);
+            return true;
+        }
+
+        if (splitMode == Tokenizer.SplitMode.C) {
+            return true;
+        }
+
+        // split into A/B unit
+        List<Morpheme> subUnits = m.split(splitMode);
+        if (subUnits.size() > 1) {
+            aUnitIterator = subUnits.listIterator();
+            aUnitOffset = offsetAtt.startOffset();
+            posLengthAtt.setPositionLength(subUnits.size());
+        } else {
+            posLengthAtt.setPositionLength(1);
+        }
+
+        return true;
     }
 
     private void setAUnitAttribute(Morpheme morpheme) {
