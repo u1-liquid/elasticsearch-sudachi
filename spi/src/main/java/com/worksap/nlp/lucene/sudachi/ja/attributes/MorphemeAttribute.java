@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Works Applications Co., Ltd.
+ * Copyright (c) 2023-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package com.worksap.nlp.lucene.sudachi.ja.attributes;
+
+import java.util.List;
 
 import com.worksap.nlp.sudachi.Morpheme;
 import org.apache.lucene.analysis.TokenStream;
@@ -36,4 +38,17 @@ public interface MorphemeAttribute extends Attribute {
      *            new object
      */
     void setMorpheme(Morpheme morpheme);
+
+    /**
+     * @return The offset mapping for the current morpheme
+     */
+    List<Integer> getOffsets();
+
+    /**
+     * Set the offset mapping for the morpheme
+     * 
+     * @param offsets
+     *            actual offset for each offset in the morpheme
+     */
+    void setOffsets(List<Integer> offsets);
 }

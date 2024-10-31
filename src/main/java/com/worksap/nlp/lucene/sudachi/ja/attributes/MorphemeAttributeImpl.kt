@@ -26,6 +26,8 @@ import org.apache.lucene.util.AttributeReflector
 
 class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
   private var morpheme: MorphemeWrapper? = null
+  // mapping from the character to the original reader
+  private var offsetMap: List<Int> = listOf()
 
   private class MorphemeWrapper(morpheme: Morpheme) : ToXContent {
     private val morpheme = morpheme
@@ -53,10 +55,14 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
 
   override fun reflectWith(reflector: AttributeReflector) {
     reflector.reflect<MorphemeAttribute>("morpheme", morpheme)
+    reflector.reflect<MorphemeAttribute>("offsetMap", offsetMap)
   }
 
   override fun copyTo(target: AttributeImpl?) {
-    (target as? MorphemeAttributeImpl)?.let { it.setMorpheme(getMorpheme()) }
+    (target as? MorphemeAttributeImpl)?.let {
+      it.setMorpheme(getMorpheme())
+      it.setOffsets(getOffsets())
+    }
   }
 
   override fun getMorpheme(): Morpheme? {
@@ -65,5 +71,13 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
 
   override fun setMorpheme(morpheme: Morpheme?) {
     this.morpheme = morpheme?.let { m -> MorphemeWrapper(m) }
+  }
+
+  override fun getOffsets(): List<Int> {
+    return offsetMap
+  }
+
+  override fun setOffsets(offsets: List<Int>) {
+    this.offsetMap = offsets
   }
 }
