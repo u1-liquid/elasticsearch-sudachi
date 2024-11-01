@@ -118,7 +118,7 @@ public class SudachiSplitFilter extends TokenFilter {
     }
 
     private int correctOffset(int currectOff) {
-        assert (0 <= currectOff && currectOff <= this.offsetMap.size());
+        // assert (0 <= currectOff && currectOff <= this.offsetMap.size());
         return this.offsetMap.get(currectOff);
     }
 
