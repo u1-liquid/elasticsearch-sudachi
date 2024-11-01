@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Works Applications Co., Ltd.
+ * Copyright (c) 2022-2024 Works Applications Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -194,6 +194,69 @@ class TestSudachiSplitFilter : BaseTokenStreamTestCase() {
         intArrayOf(2, 1, 1),
         3,
     )
+  }
+
+  @Test
+  fun testWithCharNormalizationBySearchMode() {
+    val tokenStream = setUpTokenStream("search", "六三四㍿に行くカ゛カ゛カ゛")
+    assertTokenStreamContents(
+        tokenStream,
+        arrayOf("六三四", "㍿", "㍿", "", "に", "行く", "カ゛カ゛カ゛", "カ゛カ゛", "カ゛"),
+        intArrayOf(0, 3, 3, 4, 4, 5, 7, 7, 11),
+        intArrayOf(3, 4, 4, 4, 5, 7, 13, 11, 13),
+        intArrayOf(1, 1, 0, 1, 1, 1, 1, 0, 1),
+        intArrayOf(1, 2, 1, 1, 1, 1, 2, 1, 1),
+        13,
+    )
+  }
+
+  @Test
+  fun testWithCharNormalizationInNormalizedFormBySearchMode() {
+    var tokenStream = setUpTokenStream("search", "六三四㍿に行くカ゛カ゛カ゛")
+    val normFactory = SudachiNormalizedFormFilterFactory(mutableMapOf())
+    tokenStream = normFactory.create(tokenStream)
+
+    assertTokenStreamContents(
+        tokenStream,
+        arrayOf("六三四", "株式会社", "株式", "会社", "に", "行く", "ガガガ", "ガガ", "ガ"),
+        intArrayOf(0, 3, 3, 4, 4, 5, 7, 7, 11),
+        intArrayOf(3, 4, 4, 4, 5, 7, 13, 11, 13),
+        intArrayOf(1, 1, 0, 1, 1, 1, 1, 0, 1),
+        intArrayOf(1, 2, 1, 1, 1, 1, 2, 1, 1),
+        13,
+    )
+  }
+
+  @Test
+  fun testWithCharNormalizationByExtendedMode() {
+    // extending normalized form seems more natural, but we cannot calculate their offsets.
+    val tokenStream = setUpTokenStream("extended", "10㌢㍍いったソ゛")
+    assertTokenStreamContents(
+        tokenStream,
+        arrayOf("1", "0", "㌢㍍", "㌢", "㍍", "いっ", "た", "ソ゛", "ソ", "゛"),
+        intArrayOf(0, 1, 2, 2, 3, 4, 6, 7, 7, 8),
+        intArrayOf(1, 2, 4, 3, 4, 6, 7, 9, 8, 9),
+        intArrayOf(1, 1, 1, 0, 1, 1, 1, 1, 0, 1),
+        intArrayOf(1, 1, 2, 1, 1, 1, 1, 2, 1, 1),
+        9,
+    )
+  }
+
+  @Test
+  fun testWithCharNormalizationInNormalizedFormByExtendedMode() {
+    // extending normalized form seems more natural, but we cannot calculate their offsets.
+    var tokenStream = setUpTokenStream("extended", "10㌢㍍いったソ゛")
+    val normFactory = SudachiNormalizedFormFilterFactory(mutableMapOf())
+    tokenStream = normFactory.create(tokenStream)
+
+    assertTokenStreamContents(
+        tokenStream,
+        arrayOf("1", "0", "センチメートル", "㌢", "㍍", "行く", "た", "ゾ", "ソ", "゛"),
+        intArrayOf(0, 1, 2, 2, 3, 4, 6, 7, 7, 8),
+        intArrayOf(1, 2, 4, 3, 4, 6, 7, 9, 8, 9),
+        intArrayOf(1, 1, 1, 0, 1, 1, 1, 1, 0, 1),
+        intArrayOf(1, 1, 2, 1, 1, 1, 1, 2, 1, 1),
+        9)
   }
 
   fun setUpTokenStream(mode: String, input: String): TokenStream {
