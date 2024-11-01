@@ -114,20 +114,37 @@ class MorphemeAttributeImplTest {
     val deserialized = Json.decodeFromString<MorphemeHolder>(serialized)
 
     assertNotNull(deserialized.morpheme)
-    assertNotNull(deserialized.offsetMap)
     assertEquals(morpheme.surface(), deserialized.morpheme.surface)
     assertEquals(morpheme.dictionaryForm(), deserialized.morpheme.dictionaryForm)
     assertEquals(morpheme.normalizedForm(), deserialized.morpheme.normalizedForm)
     assertEquals(morpheme.readingForm(), deserialized.morpheme.readingForm)
     assertEquals(morpheme.partOfSpeech(), deserialized.morpheme.partOfSpeech)
-    assertEquals(offsets, deserialized.offsetMap)
+    assertEquals(offsets, deserialized.morpheme.offsetMap)
+  }
+
+  @Test
+  fun toXContentNullMorpheme() {
+    var morphemeAtt = MorphemeAttributeImpl()
+
+    val builder = XContentBuilder.builder(XContentType.JSON.xContent())
+    builder.startObject()
+    morphemeAtt.reflectWith(
+        fun(attClass, key, value) {
+          assertEquals(MorphemeAttribute::class.java, attClass)
+          builder.field(key, value)
+        })
+    builder.endObject()
+    builder.flush()
+
+    val serialized = builder.getOutputStream().toString()
+    val deserialized = Json.decodeFromString<MorphemeHolder>(serialized)
+    assertNull(deserialized.morpheme)
   }
 }
 
 @Serializable
 data class MorphemeHolder(
-    val morpheme: MorphemeAttributeHolder,
-    val offsetMap: List<Int>,
+    val morpheme: MorphemeAttributeHolder?,
 )
 
 @Serializable
@@ -137,4 +154,5 @@ data class MorphemeAttributeHolder(
     val normalizedForm: String,
     val readingForm: String,
     val partOfSpeech: List<String>,
+    val offsetMap: List<Int>,
 )

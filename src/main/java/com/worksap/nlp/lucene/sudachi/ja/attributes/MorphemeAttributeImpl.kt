@@ -25,37 +25,51 @@ import org.apache.lucene.util.AttributeImpl
 import org.apache.lucene.util.AttributeReflector
 
 class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
-  private var morpheme: MorphemeWrapper? = null
-  // mapping from the character to the original reader
-  private var offsetMap: List<Int> = listOf()
+  private val inner: ToXContentWrapper = ToXContentWrapper(null, listOf())
 
-  private class MorphemeWrapper(morpheme: Morpheme) : ToXContent {
-    private val morpheme = morpheme
+  private class ToXContentWrapper(morpheme: Morpheme?, offsetMap: List<Int>) : ToXContent {
+    private var morpheme = morpheme
+    // mapping from the character to the original reader
+    private var offsetMap = offsetMap
 
     override fun toXContent(builder: XContentBuilder, params: ToXContentParams): XContentBuilder {
       builder.value(
           mapOf(
-              "surface" to morpheme.surface(),
-              "dictionaryForm" to morpheme.dictionaryForm(),
-              "normalizedForm" to morpheme.normalizedForm(),
-              "readingForm" to morpheme.readingForm(),
-              "partOfSpeech" to morpheme.partOfSpeech(),
+              "surface" to morpheme?.surface(),
+              "dictionaryForm" to morpheme?.dictionaryForm(),
+              "normalizedForm" to morpheme?.normalizedForm(),
+              "readingForm" to morpheme?.readingForm(),
+              "partOfSpeech" to morpheme?.partOfSpeech(),
+              "offsetMap" to offsetMap,
           ))
       return builder
     }
 
-    fun unwrap(): Morpheme {
+    fun getMorpheme(): Morpheme? {
       return morpheme
+    }
+
+    fun setMorpheme(morpheme: Morpheme?) {
+      this.morpheme = morpheme
+    }
+
+    fun getOffsets(): List<Int> {
+      return offsetMap
+    }
+
+    fun setOffsets(offsets: List<Int>) {
+      this.offsetMap = offsets
     }
   }
 
   override fun clear() {
-    morpheme = null
+    inner.setMorpheme(null)
+    inner.setOffsets(listOf())
   }
 
   override fun reflectWith(reflector: AttributeReflector) {
-    reflector.reflect<MorphemeAttribute>("morpheme", morpheme)
-    reflector.reflect<MorphemeAttribute>("offsetMap", offsetMap)
+    reflector.reflect<MorphemeAttribute>(
+        "morpheme", if (inner.getMorpheme() != null) inner else null)
   }
 
   override fun copyTo(target: AttributeImpl?) {
@@ -66,18 +80,18 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
   }
 
   override fun getMorpheme(): Morpheme? {
-    return morpheme?.let { m -> m.unwrap() }
+    return inner.getMorpheme()
   }
 
   override fun setMorpheme(morpheme: Morpheme?) {
-    this.morpheme = morpheme?.let { m -> MorphemeWrapper(m) }
+    inner.setMorpheme(morpheme)
   }
 
   override fun getOffsets(): List<Int> {
-    return offsetMap
+    return inner.getOffsets()
   }
 
   override fun setOffsets(offsets: List<Int>) {
-    this.offsetMap = offsets
+    inner.setOffsets(offsets)
   }
 }
