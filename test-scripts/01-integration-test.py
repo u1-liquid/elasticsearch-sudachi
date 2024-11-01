@@ -142,6 +142,122 @@ class TestICUFiltered(unittest.TestCase):
         self.assertEqual(5, tokens[0]["end_offset"])
         return
 
+    def test_correct_split_offset_with_icu_filter(self):
+        body = {
+            "tokenizer": "sudachi_tokenizer",
+            "char_filter": {
+                "type": "icu_normalizer",
+                "name": "nfkc_cf",
+                "mode": "compose"
+            },
+            "filter": {
+                "type": "sudachi_split",
+                "mode": "search"
+            },
+            "text": "六三四㍿のアッフ\u309Aルハ\u309Aイ",
+        }
+        resp = es_instance.analyze(body)
+        self.assertEqual(200, resp.status, f"data: {resp.data}")
+
+        tokens = json.loads(resp.data.decode())["tokens"]
+        self.assertEqual(8, len(tokens))
+        self.assertEqual("株式会社", tokens[1]["token"])
+        self.assertEqual(1, tokens[1]["position"])
+        self.assertEqual(2, tokens[1]["positionLength"])
+        self.assertEqual(3, tokens[1]["start_offset"])
+        self.assertEqual(4, tokens[1]["end_offset"])
+
+        self.assertEqual("株式", tokens[2]["token"])
+        self.assertEqual(1, tokens[2]["position"])
+        self.assertEqual(3, tokens[2]["start_offset"])
+        self.assertEqual(3, tokens[2]["end_offset"])
+        self.assertEqual("会社", tokens[3]["token"])
+        self.assertEqual(2, tokens[3]["position"])
+        self.assertEqual(3, tokens[3]["start_offset"])
+        self.assertEqual(4, tokens[3]["end_offset"])
+
+        self.assertEqual("アップルパイ", tokens[5]["token"])
+        self.assertEqual(4, tokens[5]["position"])
+        self.assertEqual(2, tokens[1]["positionLength"])
+        self.assertEqual(5, tokens[5]["start_offset"])
+        self.assertEqual(13, tokens[5]["end_offset"])
+
+        self.assertEqual("アップル", tokens[6]["token"])
+        self.assertEqual(4, tokens[6]["position"])
+        self.assertEqual(5, tokens[6]["start_offset"])
+        self.assertEqual(10, tokens[6]["end_offset"])
+        self.assertEqual("パイ", tokens[7]["token"])
+        self.assertEqual(5, tokens[7]["position"])
+        self.assertEqual(10, tokens[7]["start_offset"])
+        self.assertEqual(13, tokens[7]["end_offset"])
+        return
+
+    def test_correct_OOV_offset_with_icu_filter(self):
+        body = {
+            "tokenizer": "sudachi_tokenizer",
+            "char_filter": {
+                "type": "icu_normalizer",
+                "name": "nfkc_cf",
+                "mode": "compose"
+            },
+            "filter": {
+                "type": "sudachi_split",
+                "mode": "extended"
+            },
+            "text": "10㍉㌢進んでホ\u3099ホ\u3099ホ\u3099",
+        }
+        resp = es_instance.analyze(body)
+        self.assertEqual(200, resp.status, f"data: {resp.data}")
+
+        tokens = json.loads(resp.data.decode())["tokens"]
+        self.assertEqual(13, len(tokens))
+        self.assertEqual("ミリセンチ", tokens[1]["token"])
+        self.assertEqual(1, tokens[1]["position"])
+        self.assertEqual(5, tokens[1]["positionLength"])
+        self.assertEqual(2, tokens[1]["start_offset"])
+        self.assertEqual(4, tokens[1]["end_offset"])
+
+        self.assertEqual("ミ", tokens[2]["token"])
+        self.assertEqual(1, tokens[2]["position"])
+        self.assertEqual(2, tokens[2]["start_offset"])
+        self.assertEqual(2, tokens[2]["end_offset"])
+        self.assertEqual("リ", tokens[3]["token"])
+        self.assertEqual(2, tokens[3]["position"])
+        self.assertEqual(2, tokens[3]["start_offset"])
+        self.assertEqual(3, tokens[3]["end_offset"])
+        self.assertEqual("セ", tokens[4]["token"])
+        self.assertEqual(3, tokens[4]["position"])
+        self.assertEqual(3, tokens[4]["start_offset"])
+        self.assertEqual(3, tokens[4]["end_offset"])
+        self.assertEqual("ン", tokens[5]["token"])
+        self.assertEqual(4, tokens[5]["position"])
+        self.assertEqual(3, tokens[5]["start_offset"])
+        self.assertEqual(3, tokens[5]["end_offset"])
+        self.assertEqual("チ", tokens[6]["token"])
+        self.assertEqual(5, tokens[6]["position"])
+        self.assertEqual(3, tokens[6]["start_offset"])
+        self.assertEqual(4, tokens[6]["end_offset"])
+
+        self.assertEqual("ボボボ", tokens[9]["token"])
+        self.assertEqual(8, tokens[9]["position"])
+        self.assertEqual(3, tokens[9]["positionLength"])
+        self.assertEqual(7, tokens[9]["start_offset"])
+        self.assertEqual(13, tokens[9]["end_offset"])
+
+        self.assertEqual("ボ", tokens[10]["token"])
+        self.assertEqual(8, tokens[10]["position"])
+        self.assertEqual(7, tokens[10]["start_offset"])
+        self.assertEqual(9, tokens[10]["end_offset"])
+        self.assertEqual("ボ", tokens[11]["token"])
+        self.assertEqual(9, tokens[11]["position"])
+        self.assertEqual(9, tokens[11]["start_offset"])
+        self.assertEqual(11, tokens[11]["end_offset"])
+        self.assertEqual("ボ", tokens[12]["token"])
+        self.assertEqual(10, tokens[12]["position"])
+        self.assertEqual(11, tokens[12]["start_offset"])
+        self.assertEqual(13, tokens[12]["end_offset"])
+        return
+
 
 class TestSubplugin(unittest.TestCase):
     # requires :subplugin is installed with :testlib
