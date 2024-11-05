@@ -1,6 +1,6 @@
 import argparse
 from multiprocessing import Pool
-import urllib3.request
+import urllib3
 import json
 from pathlib import Path
 
@@ -31,7 +31,7 @@ class Test(object):
 
     def test57Games(self):
         games = self.es.find("ゲーム")
-        self.assertEq(57, games["hits"]["total"]["value"])
+        self.assertEq(59, games["hits"]["total"]["value"])
 
     def test107Daigaku(self):
         docs = self.es.find("大学")

@@ -1,6 +1,6 @@
 import argparse
 from multiprocessing import Pool
-import urllib3.request
+import urllib3
 import json
 from pathlib import Path
 
