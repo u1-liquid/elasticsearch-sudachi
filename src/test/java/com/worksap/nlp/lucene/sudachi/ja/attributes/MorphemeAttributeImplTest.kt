@@ -97,7 +97,7 @@ class MorphemeAttributeImplTest {
     var morphemeAtt = MorphemeAttributeImpl()
     val morpheme = getFirstMorpheme("東京都")!!
     morphemeAtt.setMorpheme(morpheme)
-    val offsets = listOf(0, 3)
+    val offsets = listOf(0, 1, 2, 3)
     morphemeAtt.setOffsets(offsets)
 
     val builder = XContentBuilder.builder(XContentType.JSON.xContent())
