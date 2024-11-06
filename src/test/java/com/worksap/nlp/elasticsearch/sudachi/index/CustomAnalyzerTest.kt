@@ -45,7 +45,60 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     """.jsonSettings()
     val analyzers = engine.indexAnalyzers(settings)
     val basic = analyzers.get("sudachi_basic")
-    basic.assertTerms("東京に行く", "東京", "に", "行く")
+    basic.assertTerms("東京に行く。", "東京", "に", "行く")
+  }
+
+  @Test
+  fun discardPunctuationFalse() {
+    val settings =
+        """
+      {
+        "index.analysis": {
+          "analyzer": {
+            "sudachi_basic": {
+              "type": "custom",
+              "tokenizer": "sudachi_tokenizer"
+            }
+          },
+          "tokenizer": {
+            "sudachi_tokenizer": {
+              "type": "sudachi_tokenizer",
+              "discard_punctuation": false
+            }
+          }
+        }
+      }
+    """.jsonSettings()
+    val analyzers = engine.indexAnalyzers(settings)
+    val basic = analyzers.get("sudachi_basic")
+    basic.assertTerms("東京に行く。", "東京", "に", "行く", "。")
+  }
+
+  @Test
+  fun allowEmptyMorphemeTrue() {
+    val settings =
+        """
+      {
+        "index.analysis": {
+          "analyzer": {
+            "sudachi_basic": {
+              "type": "custom",
+              "tokenizer": "sudachi_tokenizer"
+            }
+          },
+          "tokenizer": {
+            "sudachi_tokenizer": {
+              "type": "sudachi_tokenizer",
+              "split_mode": "A",
+              "allow_empty_morpheme": true
+            }
+          }
+        }
+      }
+    """.jsonSettings()
+    val analyzers = engine.indexAnalyzers(settings)
+    val basic = analyzers.get("sudachi_basic")
+    basic.assertTerms("㍿に行く", "㍿", "", "に", "行く")
   }
 
   @Test
@@ -53,7 +106,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_basic": {
               "type": "custom",
@@ -71,7 +124,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
           },
           "filter": {
             "pos": {
-              "type": "sudachi_part_of_speech"              
+              "type": "sudachi_part_of_speech"
             }
           }
         }
@@ -87,7 +140,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_basic": {
               "type": "custom",
@@ -122,7 +175,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -156,7 +209,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -190,7 +243,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -224,7 +277,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -259,7 +312,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -294,7 +347,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
@@ -329,7 +382,7 @@ class CustomAnalyzerTest : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi_test": {
               "type": "custom",
