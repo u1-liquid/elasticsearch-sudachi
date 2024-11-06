@@ -55,11 +55,11 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     - name: Analyze with sonarqube (PR)
       if: github.event.workflow_run.event == 'pull_request'
-      run: >
-        ./gradlew --info sonar
-          -Dsonar.scm.provider=git
-          -Dsonar.pullrequest.key=${{ env.PR_NUMBER }}
-          -Dsonar.pullrequest.branch=${{ env.PR_HEAD_REF }}
+      run: |
+        ./gradlew --info sonar \
+          -Dsonar.scm.provider=git \
+          -Dsonar.pullrequest.key=${{ env.PR_NUMBER }} \
+          -Dsonar.pullrequest.branch=${{ env.PR_HEAD_REF }} \
           -Dsonar.pullrequest.base=${{ env.PR_BASE_REF }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
