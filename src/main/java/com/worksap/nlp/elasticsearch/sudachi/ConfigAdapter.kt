@@ -51,17 +51,22 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
 
   companion object {
     const val PARAM_SPLIT_MODE_DEPRECATED = "mode"
+    const val PARAM_SPLIT_MODE = "split_mode"
     const val PARAM_SETTINGS_PATH = "settings_path"
+    const val PARAM_RESOURCES_PATH = "resources_path"
     const val PARAM_ADDITIONAL_SETTINGS = "additional_settings"
     const val PARAM_DISCARD_PUNCTUATION = "discard_punctuation"
 
-    private object SplitModeFlag : EnumFlag<SplitMode>("split_mode", SplitMode.C)
+    const val DEFAULT_SETTINGS_FILENAME = "sudachi.json"
+    const val DEFAULT_RESOURCE_PATH = "sudachi"
+
+    private object SplitModeFlag : EnumFlag<SplitMode>(PARAM_SPLIT_MODE, SplitMode.C)
 
     @JvmStatic
     fun splitMode(settings: Settings): SplitMode {
       if (settings.get(PARAM_SPLIT_MODE_DEPRECATED, null) != null) {
         throw IllegalArgumentException(
-            "Setting $PARAM_SPLIT_MODE_DEPRECATED is deprecated, use SudachiSplitFilter instead",
+            "Setting $PARAM_SPLIT_MODE_DEPRECATED is deprecated, use $PARAM_SPLIT_MODE instead",
         )
       }
       return SplitModeFlag.get(settings)
@@ -69,12 +74,12 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
 
     @JvmStatic
     fun resourcesPath(env: Environment, settings: Settings): Path {
-      return env.configFile().resolve(settings.get("resources_path", "sudachi"))
+      return env.configFile().resolve(settings.get(PARAM_RESOURCES_PATH, DEFAULT_RESOURCE_PATH))
     }
 
     private fun readDefaultConfig(root: Path, baseAnchor: PathAnchor): Config {
       val anchor = PathAnchor.filesystem(root).andThen(baseAnchor)
-      val resolved = root.resolve("sudachi.json")
+      val resolved = root.resolve(DEFAULT_SETTINGS_FILENAME)
       val exists =
           try {
             resolved.exists()
