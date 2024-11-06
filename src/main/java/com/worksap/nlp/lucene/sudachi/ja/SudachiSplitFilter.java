@@ -130,13 +130,11 @@ public class SudachiSplitFilter extends TokenFilter {
             posIncAtt.setPositionIncrement(1);
         }
 
-        int startOffset = subunits.offset();
-        Morpheme morpheme = subunits.next();
-        int endOffset = subunits.offset();
-        termAtt.setEmpty().append(morpheme.surface());
-        morphemeAtt.setMorpheme(morpheme);
-        morphemeAtt.setOffsets(offsetMap.subList(startOffset, endOffset + 1));
-        offsetAtt.setOffset(correctOffset(startOffset), correctOffset(endOffset));
+        MorphemeSubunits.Subunit su = subunits.next();
+        termAtt.setEmpty().append(su.morpheme.surface());
+        morphemeAtt.setMorpheme(su.morpheme);
+        morphemeAtt.setOffsets(offsetMap.subList(su.begin, su.end + 1));
+        offsetAtt.setOffset(correctOffset(su.begin), correctOffset(su.end));
     }
 
     private void setOOVAttribute() {
@@ -194,29 +192,40 @@ public class SudachiSplitFilter extends TokenFilter {
     }
 
     static class MorphemeSubunits {
+        static class Subunit {
+            final Morpheme morpheme;
+            final int begin;
+            final int end;
+
+            public Subunit(Morpheme morpheme, int begin, int end) {
+                this.morpheme = morpheme;
+                this.begin = begin;
+                this.end = end;
+            }
+        }
+
         private List<Morpheme> morphemes;
         private int size;
         private int index;
-        private int offset;
+        private int baseOffset;
 
         public void setUnits(List<Morpheme> morphemes) {
             this.morphemes = morphemes;
             size = morphemes.size();
             index = 0;
-            offset = 0;
+            baseOffset = morphemes.get(0).begin();
         }
 
         public boolean hasNext() {
             return index < size;
         }
 
-        public Morpheme next() {
+        public Subunit next() {
             if (!hasNext()) {
                 throw new IllegalStateException();
             }
             Morpheme m = morphemes.get(index++);
-            offset += m.end() - m.begin();
-            return m;
+            return new Subunit(m, m.begin() - baseOffset, m.end() - baseOffset);
         }
 
         public int size() {
@@ -225,10 +234,6 @@ public class SudachiSplitFilter extends TokenFilter {
 
         public int index() {
             return index;
-        }
-
-        public int offset() {
-            return offset;
         }
     }
 }
