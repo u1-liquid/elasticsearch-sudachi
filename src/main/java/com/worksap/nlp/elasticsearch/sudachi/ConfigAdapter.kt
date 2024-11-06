@@ -36,17 +36,20 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
   }
 
   val discardPunctuation: Boolean = settings.getAsBoolean(PARAM_DISCARD_PUNCTUATION, true)
-
+  // default false to let every morpheme have non-null span in the input text
+  val allowEmptyMorpheme: Boolean = settings.getAsBoolean(PARAM_ALLOW_EMPTY_MORPHEME, false)
   val mode = splitMode(settings)
 
   private fun settingsFile(settings: Settings): Config {
     val settingsPath = settings.get(PARAM_SETTINGS_PATH)
-    return if (settingsPath == null) {
-      readDefaultConfig(basePath, fullAnchor)
-    } else {
-      val configObject = fullAnchor.resource<Any>(settingsPath)
-      Config.fromResource(configObject, fullAnchor)
-    }
+    val base =
+        if (settingsPath == null) {
+          readDefaultConfig(basePath, fullAnchor)
+        } else {
+          val configObject = fullAnchor.resource<Any>(settingsPath)
+          Config.fromResource(configObject, fullAnchor)
+        }
+    return base.allowEmptyMorpheme(allowEmptyMorpheme)
   }
 
   companion object {
@@ -56,6 +59,7 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
     const val PARAM_RESOURCES_PATH = "resources_path"
     const val PARAM_ADDITIONAL_SETTINGS = "additional_settings"
     const val PARAM_DISCARD_PUNCTUATION = "discard_punctuation"
+    const val PARAM_ALLOW_EMPTY_MORPHEME = "allow_empty_morpheme"
 
     const val DEFAULT_SETTINGS_FILENAME = "sudachi.json"
     const val DEFAULT_RESOURCE_PATH = "sudachi"
