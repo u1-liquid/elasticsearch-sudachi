@@ -29,16 +29,16 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
   private val basePath = resourcesPath(env, settings)
   private val fullAnchor = PathAnchor.filesystem(basePath).andThen(anchor)
 
+  val discardPunctuation: Boolean = settings.getAsBoolean(PARAM_DISCARD_PUNCTUATION, true)
+  // default false to let every morpheme have non-null span in the input text
+  val allowEmptyMorpheme: Boolean = settings.getAsBoolean(PARAM_ALLOW_EMPTY_MORPHEME, false)
+  val mode = splitMode(settings)
+
   val compiled: Config = run {
     val base = settingsFile(settings)
     val additional = settingsInlineString(settings, fullAnchor)
     additional.withFallback(base).anchoredWith(fullAnchor)
   }
-
-  val discardPunctuation: Boolean = settings.getAsBoolean(PARAM_DISCARD_PUNCTUATION, true)
-  // default false to let every morpheme have non-null span in the input text
-  val allowEmptyMorpheme: Boolean = settings.getAsBoolean(PARAM_ALLOW_EMPTY_MORPHEME, false)
-  val mode = splitMode(settings)
 
   private fun settingsFile(settings: Settings): Config {
     val settingsPath = settings.get(PARAM_SETTINGS_PATH)
