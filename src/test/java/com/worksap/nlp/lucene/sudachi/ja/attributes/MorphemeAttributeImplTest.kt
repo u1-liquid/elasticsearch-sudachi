@@ -48,7 +48,7 @@ class MorphemeAttributeImplTest {
   @Before
   fun setup() {
     val configDir = testDic.root.toPath().resolve("config/sudachi")
-    config = Config.fromFile(configDir.resolve("sudachi.json"))
+    config = Config.fromFile(configDir.resolve("sudachi.json")).allowEmptyMorpheme(false)
   }
 
   @Test

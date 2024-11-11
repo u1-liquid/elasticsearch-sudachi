@@ -102,6 +102,8 @@ The `sudachi_tokenizer` tokenizer tokenizes input texts using Sudachi.
   - A: The shortest units equivalent to the UniDic short unit
       - Ex) 選挙,管理,委員,会
 - discard\_punctuation: Select to discard punctuation or not. (bool, default: true)
+- allow\_empty\_morpheme: Allow output morpheme to have an empty span. (bool, default: false)
+  - This happens when an input text contains a composite character (e.g. ㍿) and it is split into morphemes. If false (default), all split morphemes will contain the span of the character. If true, only the first morpheme will contain the span and the span of other morphemes can be empty.
 - settings\_path: Sudachi setting file path. The path may be absolute or relative; relative paths are resolved with respect to es\_config. (string, default: null)
 - resources\_path: Sudachi dictionary path. The path may be absolute or relative; relative paths are resolved with respect to es\_config. (string, default: null)
 - additional_settings: Describes a configuration JSON string for Sudachi. This JSON string will be merged into the default configuration. If this property is set, `settings_path` will be overridden.

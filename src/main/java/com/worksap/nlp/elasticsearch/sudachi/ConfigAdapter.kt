@@ -29,39 +29,48 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
   private val basePath = resourcesPath(env, settings)
   private val fullAnchor = PathAnchor.filesystem(basePath).andThen(anchor)
 
+  val discardPunctuation: Boolean = settings.getAsBoolean(PARAM_DISCARD_PUNCTUATION, true)
+  // default false to let every morpheme have non-null span in the input text
+  val allowEmptyMorpheme: Boolean = settings.getAsBoolean(PARAM_ALLOW_EMPTY_MORPHEME, false)
+  val mode = splitMode(settings)
+
   val compiled: Config = run {
     val base = settingsFile(settings)
     val additional = settingsInlineString(settings, fullAnchor)
     additional.withFallback(base).anchoredWith(fullAnchor)
   }
 
-  val discardPunctuation: Boolean = settings.getAsBoolean(PARAM_DISCARD_PUNCTUATION, true)
-
-  val mode = splitMode(settings)
-
   private fun settingsFile(settings: Settings): Config {
     val settingsPath = settings.get(PARAM_SETTINGS_PATH)
-    return if (settingsPath == null) {
-      readDefaultConfig(basePath, fullAnchor)
-    } else {
-      val configObject = fullAnchor.resource<Any>(settingsPath)
-      Config.fromResource(configObject, fullAnchor)
-    }
+    val base =
+        if (settingsPath == null) {
+          readDefaultConfig(basePath, fullAnchor)
+        } else {
+          val configObject = fullAnchor.resource<Any>(settingsPath)
+          Config.fromResource(configObject, fullAnchor)
+        }
+    return base.allowEmptyMorpheme(allowEmptyMorpheme)
   }
 
   companion object {
     const val PARAM_SPLIT_MODE_DEPRECATED = "mode"
+    const val PARAM_SPLIT_MODE = "split_mode"
     const val PARAM_SETTINGS_PATH = "settings_path"
+    const val PARAM_RESOURCES_PATH = "resources_path"
     const val PARAM_ADDITIONAL_SETTINGS = "additional_settings"
     const val PARAM_DISCARD_PUNCTUATION = "discard_punctuation"
+    const val PARAM_ALLOW_EMPTY_MORPHEME = "allow_empty_morpheme"
 
-    private object SplitModeFlag : EnumFlag<SplitMode>("split_mode", SplitMode.C)
+    const val DEFAULT_SETTINGS_FILENAME = "sudachi.json"
+    const val DEFAULT_RESOURCE_PATH = "sudachi"
+
+    private object SplitModeFlag : EnumFlag<SplitMode>(PARAM_SPLIT_MODE, SplitMode.C)
 
     @JvmStatic
     fun splitMode(settings: Settings): SplitMode {
       if (settings.get(PARAM_SPLIT_MODE_DEPRECATED, null) != null) {
         throw IllegalArgumentException(
-            "Setting $PARAM_SPLIT_MODE_DEPRECATED is deprecated, use SudachiSplitFilter instead",
+            "Setting $PARAM_SPLIT_MODE_DEPRECATED is deprecated, use $PARAM_SPLIT_MODE instead",
         )
       }
       return SplitModeFlag.get(settings)
@@ -69,12 +78,12 @@ class ConfigAdapter(anchor: PathAnchor, settings: Settings, env: Environment) {
 
     @JvmStatic
     fun resourcesPath(env: Environment, settings: Settings): Path {
-      return env.configFile().resolve(settings.get("resources_path", "sudachi"))
+      return env.configFile().resolve(settings.get(PARAM_RESOURCES_PATH, DEFAULT_RESOURCE_PATH))
     }
 
     private fun readDefaultConfig(root: Path, baseAnchor: PathAnchor): Config {
       val anchor = PathAnchor.filesystem(root).andThen(baseAnchor)
-      val resolved = root.resolve("sudachi.json")
+      val resolved = root.resolve(DEFAULT_SETTINGS_FILENAME)
       val exists =
           try {
             resolved.exists()

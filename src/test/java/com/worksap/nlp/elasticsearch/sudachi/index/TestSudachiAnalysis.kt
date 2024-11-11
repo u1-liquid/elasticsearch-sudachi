@@ -51,7 +51,7 @@ open class TestSudachiAnalysis : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi": {
               "type": "sudachi",
@@ -71,7 +71,7 @@ open class TestSudachiAnalysis : SearchEngineTestBase {
     val settings =
         """
       {
-        "index.analysis": {          
+        "index.analysis": {
           "analyzer": {
             "sudachi": {
               "type": "sudachi",

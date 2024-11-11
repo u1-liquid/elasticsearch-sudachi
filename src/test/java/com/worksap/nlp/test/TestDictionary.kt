@@ -187,7 +187,7 @@ class InMemoryDictionary {
     val base = Config.fromClasspath(ResourceUtil.resource("sudachi.json"), anchor)
     val dic = TestDictionary.inMemorySystemData.duplicate()
     dic.order(ByteOrder.LITTLE_ENDIAN)
-    base.systemDictionary(BinaryDictionary(dic))
+    base.systemDictionary(BinaryDictionary(dic)).allowEmptyMorpheme(false)
   }
 
   val dic = newDictionary()

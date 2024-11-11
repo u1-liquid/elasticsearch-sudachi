@@ -201,8 +201,8 @@ class TestSudachiSplitFilter : BaseTokenStreamTestCase() {
     val tokenStream = setUpTokenStream("search", "六三四㍿に行くカ゛カ゛カ゛")
     assertTokenStreamContents(
         tokenStream,
-        arrayOf("六三四", "㍿", "㍿", "", "に", "行く", "カ゛カ゛カ゛", "カ゛カ゛", "カ゛"),
-        intArrayOf(0, 3, 3, 4, 4, 5, 7, 7, 11),
+        arrayOf("六三四", "㍿", "㍿", "㍿", "に", "行く", "カ゛カ゛カ゛", "カ゛カ゛", "カ゛"),
+        intArrayOf(0, 3, 3, 3, 4, 5, 7, 7, 11),
         intArrayOf(3, 4, 4, 4, 5, 7, 13, 11, 13),
         intArrayOf(1, 1, 0, 1, 1, 1, 1, 0, 1),
         intArrayOf(1, 2, 1, 1, 1, 1, 2, 1, 1),
@@ -219,7 +219,7 @@ class TestSudachiSplitFilter : BaseTokenStreamTestCase() {
     assertTokenStreamContents(
         tokenStream,
         arrayOf("六三四", "株式会社", "株式", "会社", "に", "行く", "ガガガ", "ガガ", "ガ"),
-        intArrayOf(0, 3, 3, 4, 4, 5, 7, 7, 11),
+        intArrayOf(0, 3, 3, 3, 4, 5, 7, 7, 11),
         intArrayOf(3, 4, 4, 4, 5, 7, 13, 11, 13),
         intArrayOf(1, 1, 0, 1, 1, 1, 1, 0, 1),
         intArrayOf(1, 2, 1, 1, 1, 1, 2, 1, 1),
