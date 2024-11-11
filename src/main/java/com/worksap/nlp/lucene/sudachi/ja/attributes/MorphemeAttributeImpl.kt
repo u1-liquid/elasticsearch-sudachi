@@ -25,10 +25,14 @@ import org.apache.lucene.util.AttributeImpl
 import org.apache.lucene.util.AttributeReflector
 
 class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
-  private var morpheme: MorphemeWrapper? = null
+  private var morpheme: Morpheme? = null
+  // mapping from the character offset to the original reader offset
+  private var offsetMap: List<Int> = listOf()
 
-  private class MorphemeWrapper(morpheme: Morpheme) : ToXContent {
+  // wrapper class to convert data ToXContent-able
+  private class ToXContentWrapper(morpheme: Morpheme, offsetMap: List<Int>) : ToXContent {
     private val morpheme = morpheme
+    private val offsetMap = offsetMap
 
     override fun toXContent(builder: XContentBuilder, params: ToXContentParams): XContentBuilder {
       builder.value(
@@ -38,32 +42,43 @@ class MorphemeAttributeImpl : AttributeImpl(), MorphemeAttribute {
               "normalizedForm" to morpheme.normalizedForm(),
               "readingForm" to morpheme.readingForm(),
               "partOfSpeech" to morpheme.partOfSpeech(),
+              "offsetMap" to offsetMap,
           ))
       return builder
-    }
-
-    fun unwrap(): Morpheme {
-      return morpheme
     }
   }
 
   override fun clear() {
     morpheme = null
+    offsetMap = listOf()
   }
 
   override fun reflectWith(reflector: AttributeReflector) {
-    reflector.reflect<MorphemeAttribute>("morpheme", morpheme)
+    // show only when a morpheme is set
+    reflector.reflect<MorphemeAttribute>(
+        "morpheme", morpheme?.let { m -> ToXContentWrapper(m, offsetMap) })
   }
 
   override fun copyTo(target: AttributeImpl?) {
-    (target as? MorphemeAttributeImpl)?.let { it.setMorpheme(getMorpheme()) }
+    (target as? MorphemeAttributeImpl)?.let {
+      it.setMorpheme(getMorpheme())
+      it.setOffsets(getOffsets())
+    }
   }
 
   override fun getMorpheme(): Morpheme? {
-    return morpheme?.let { m -> m.unwrap() }
+    return morpheme
   }
 
   override fun setMorpheme(morpheme: Morpheme?) {
-    this.morpheme = morpheme?.let { m -> MorphemeWrapper(m) }
+    this.morpheme = morpheme
+  }
+
+  override fun getOffsets(): List<Int> {
+    return offsetMap
+  }
+
+  override fun setOffsets(offsets: List<Int>) {
+    this.offsetMap = offsets
   }
 }

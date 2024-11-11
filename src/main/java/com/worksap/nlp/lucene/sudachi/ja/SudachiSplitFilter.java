@@ -23,7 +23,6 @@ import java.util.ListIterator;
 import com.worksap.nlp.lucene.sudachi.ja.attributes.*;
 import com.worksap.nlp.lucene.sudachi.ja.util.Strings;
 import com.worksap.nlp.sudachi.Morpheme;
-
 import com.worksap.nlp.sudachi.Tokenizer;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -40,15 +39,129 @@ public class SudachiSplitFilter extends TokenFilter {
 
     public static final Mode DEFAULT_MODE = Mode.SEARCH;
 
-    static class OovChars {
-        private int length;
-        private char[] buffer = new char[0];
-        private int reserved;
-        private int index;
-        private int baseOffset;
+    private final Mode mode;
+    private final Tokenizer.SplitMode splitMode;
 
-        public void setOov(int offset, char[] src, int length) {
-            baseOffset = offset;
+    private final CharTermAttribute termAtt;
+    private final OffsetAttribute offsetAtt;
+    private final PositionIncrementAttribute posIncAtt;
+    private final PositionLengthAttribute posLengthAtt;
+    private final MorphemeAttribute morphemeAtt;
+
+    private final MorphemeSubunits subunits = new MorphemeSubunits();
+    private final OovChars oovChars = new OovChars();
+    private List<Integer> offsetMap;
+
+    public SudachiSplitFilter(TokenStream input, Mode mode, Tokenizer.SplitMode splitMode) {
+        super(input);
+        this.mode = mode;
+        this.splitMode = splitMode;
+
+        termAtt = addAttribute(CharTermAttribute.class);
+        offsetAtt = addAttribute(OffsetAttribute.class);
+        posIncAtt = addAttribute(PositionIncrementAttribute.class);
+        posLengthAtt = addAttribute(PositionLengthAttribute.class);
+        morphemeAtt = addAttribute(MorphemeAttribute.class);
+    }
+
+    @Override
+    public final boolean incrementToken() throws IOException {
+        // continue to write current split
+        if (oovChars.hasNext()) {
+            clearAttributes();
+            setOOVAttribute();
+            return true;
+        }
+        if (subunits.hasNext()) {
+            clearAttributes();
+            setAUnitAttribute();
+            return true;
+        }
+
+        // move to next morpheme
+        if (!input.incrementToken()) {
+            return false;
+        }
+
+        Morpheme m = morphemeAtt.getMorpheme();
+        this.offsetMap = morphemeAtt.getOffsets();
+        if (m == null) {
+            return true;
+        }
+
+        // oov does not have splits
+        // split into characters in extended mode
+        if (m.isOOV()) {
+            int length = 0;
+            if (mode == Mode.EXTENDED && (length = Strings.codepointCount(termAtt)) > 1) {
+                // OovChars requires character length
+                oovChars.setOov(termAtt.buffer(), termAtt.length());
+                // Position length should be codepoint length
+                posLengthAtt.setPositionLength(length);
+            }
+            return true;
+        }
+
+        // C split is the longest split
+        if (splitMode == Tokenizer.SplitMode.C) {
+            return true;
+        }
+
+        // split into A/B units
+        List<Morpheme> subsplits = m.split(splitMode);
+        if (subsplits.size() > 1) {
+            subunits.setUnits(subsplits);
+            posLengthAtt.setPositionLength(subunits.size());
+        }
+
+        return true;
+    }
+
+    private int correctOffset(int currectOff) {
+        // assert (0 <= currectOff && currectOff <= this.offsetMap.size());
+        return this.offsetMap.get(currectOff);
+    }
+
+    private void setAUnitAttribute() {
+        posLengthAtt.setPositionLength(1);
+        if (subunits.index() == 0) {
+            posIncAtt.setPositionIncrement(0);
+        } else {
+            posIncAtt.setPositionIncrement(1);
+        }
+
+        MorphemeSubunits.Subunit su = subunits.next();
+        termAtt.setEmpty().append(su.morpheme.surface());
+        morphemeAtt.setMorpheme(su.morpheme);
+        morphemeAtt.setOffsets(offsetMap.subList(su.begin, su.end + 1));
+        offsetAtt.setOffset(correctOffset(su.begin), correctOffset(su.end));
+    }
+
+    private void setOOVAttribute() {
+        posLengthAtt.setPositionLength(1);
+        if (oovChars.index() == 0) {
+            posIncAtt.setPositionIncrement(0);
+        } else {
+            posIncAtt.setPositionIncrement(1);
+        }
+
+        int startOffset = oovChars.offset();
+        char c = oovChars.next();
+        termAtt.setEmpty().append(c);
+        if (Character.isSurrogate(c) && oovChars.hasNext()) {
+            termAtt.append(oovChars.next());
+        }
+        int endOffset = oovChars.offset();
+        offsetAtt.setOffset(correctOffset(startOffset), correctOffset(endOffset));
+    }
+
+    static class OovChars {
+        private int reserved;
+        private char[] buffer = new char[0];
+        private int length;
+        private int index;
+
+        public void setOov(char[] src, int length) {
             this.length = length;
             if (reserved < length) {
                 buffer = new char[length];
@@ -65,9 +178,8 @@ public class SudachiSplitFilter extends TokenFilter {
         public char next() {
             if (index < length) {
                 return buffer[index++];
-            } else {
-                throw new IllegalStateException();
             }
+            throw new IllegalStateException();
         }
 
         public int index() {
@@ -75,102 +187,53 @@ public class SudachiSplitFilter extends TokenFilter {
         }
 
         public int offset() {
-            return baseOffset + index;
+            return index;
         }
     }
 
-    private final Mode mode;
-    private final Tokenizer.SplitMode splitMode;
-    private final CharTermAttribute termAtt;
-    private final OffsetAttribute offsetAtt;
-    private final PositionIncrementAttribute posIncAtt;
-    private final PositionLengthAttribute posLengthAtt;
-    private final MorphemeAttribute morphemeAtt;
-    private ListIterator<Morpheme> aUnitIterator;
-    private final OovChars oovChars = new OovChars();
+    static class MorphemeSubunits {
+        static class Subunit {
+            final Morpheme morpheme;
+            final int begin;
+            final int end;
 
-    private int aUnitOffset = 0;
-
-    public SudachiSplitFilter(TokenStream input, Mode mode, Tokenizer.SplitMode splitMode) {
-        super(input);
-        this.mode = mode;
-        this.splitMode = splitMode;
-
-        termAtt = addAttribute(CharTermAttribute.class);
-        offsetAtt = addAttribute(OffsetAttribute.class);
-        posIncAtt = addAttribute(PositionIncrementAttribute.class);
-        posLengthAtt = addAttribute(PositionLengthAttribute.class);
-        morphemeAtt = addAttribute(MorphemeAttribute.class);
-    }
-
-    @Override
-    public final boolean incrementToken() throws IOException {
-        if (oovChars.hasNext()) {
-            clearAttributes();
-            setOOVAttribute();
-            return true;
-        }
-        if (aUnitIterator != null && aUnitIterator.hasNext()) {
-            clearAttributes();
-            setAUnitAttribute(aUnitIterator.next());
-            return true;
-        }
-
-        if (input.incrementToken()) {
-            int length = 0;
-            Morpheme m = morphemeAtt.getMorpheme();
-            if (m == null) {
-                return true;
+            public Subunit(Morpheme morpheme, int begin, int end) {
+                this.morpheme = morpheme;
+                this.begin = begin;
+                this.end = end;
             }
-            termAtt.setEmpty().append(m.surface());
-            if (mode == Mode.EXTENDED && m.isOOV() && (length = Strings.codepointCount(termAtt)) > 1) {
-                oovChars.setOov(offsetAtt.startOffset(), termAtt.buffer(), termAtt.length());
-                posLengthAtt.setPositionLength(length);
-            } else if (splitMode != Tokenizer.SplitMode.C) {
-                List<Morpheme> subUnits = m.split(splitMode);
-                if (subUnits.size() > 1) {
-                    aUnitIterator = subUnits.listIterator();
-                    aUnitOffset = offsetAtt.startOffset();
-                    posLengthAtt.setPositionLength(subUnits.size());
-                } else {
-                    posLengthAtt.setPositionLength(1);
-                }
+        }
+
+        private List<Morpheme> morphemes;
+        private int size;
+        private int index;
+        private int baseOffset;
+
+        public void setUnits(List<Morpheme> morphemes) {
+            this.morphemes = morphemes;
+            size = morphemes.size();
+            index = 0;
+            baseOffset = morphemes.get(0).begin();
+        }
+
+        public boolean hasNext() {
+            return index < size;
+        }
+
+        public Subunit next() {
+            if (!hasNext()) {
+                throw new IllegalStateException();
             }
-            return true;
-        } else {
-            return false;
+            Morpheme m = morphemes.get(index++);
+            return new Subunit(m, m.begin() - baseOffset, m.end() - baseOffset);
         }
-    }
 
-    private void setAUnitAttribute(Morpheme morpheme) {
-        posLengthAtt.setPositionLength(1);
-        if (aUnitIterator.previousIndex() == 0) {
-            posIncAtt.setPositionIncrement(0);
-        } else {
-            posIncAtt.setPositionIncrement(1);
+        public int size() {
+            return size;
         }
-        int length = morpheme.end() - morpheme.begin();
-        offsetAtt.setOffset(aUnitOffset, aUnitOffset + length);
-        aUnitOffset += length;
-        morphemeAtt.setMorpheme(morpheme);
-        termAtt.setEmpty().append(morpheme.surface());
-    }
 
-    private void setOOVAttribute() {
-        int offset = oovChars.offset();
-        posLengthAtt.setPositionLength(1);
-        if (oovChars.index() == 0) {
-            posIncAtt.setPositionIncrement(0);
-        } else {
-            posIncAtt.setPositionIncrement(1);
-        }
-        char c = oovChars.next();
-        termAtt.setEmpty().append(c);
-        if (Character.isSurrogate(c) && oovChars.hasNext()) {
-            termAtt.append(oovChars.next());
-            offsetAtt.setOffset(offset, offset + 2);
-        } else {
-            offsetAtt.setOffset(offset, offset + 1);
+        public int index() {
+            return index;
         }
     }
 }

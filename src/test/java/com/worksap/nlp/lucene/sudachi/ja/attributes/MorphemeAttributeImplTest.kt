@@ -16,7 +16,6 @@
 
 package com.worksap.nlp.lucene.sudachi.ja.attributes
 
-import com.worksap.nlp.lucene.aliases.ToXContent
 import com.worksap.nlp.lucene.aliases.XContentBuilder
 import com.worksap.nlp.search.aliases.XContentType
 import com.worksap.nlp.sudachi.Config
@@ -66,6 +65,19 @@ class MorphemeAttributeImplTest {
   }
 
   @Test
+  fun setOffsets() {
+    var morphemeAtt = MorphemeAttributeImpl()
+    assertTrue(morphemeAtt.getOffsets().isEmpty())
+
+    val intlist = listOf(1, 2, 3)
+    morphemeAtt.setOffsets(intlist)
+    assertEquals(intlist, morphemeAtt.getOffsets())
+
+    morphemeAtt.setOffsets(listOf())
+    assertTrue(morphemeAtt.getOffsets().isEmpty())
+  }
+
+  @Test
   fun copyTo() {
     var morphemeAtt1 = MorphemeAttributeImpl()
     var morphemeAtt2 = MorphemeAttributeImpl()
@@ -85,15 +97,14 @@ class MorphemeAttributeImplTest {
     var morphemeAtt = MorphemeAttributeImpl()
     val morpheme = getFirstMorpheme("東京都")!!
     morphemeAtt.setMorpheme(morpheme)
+    val offsets = listOf(0, 1, 2, 3)
+    morphemeAtt.setOffsets(offsets)
 
     val builder = XContentBuilder.builder(XContentType.JSON.xContent())
     builder.startObject()
     morphemeAtt.reflectWith(
         fun(attClass, key, value) {
           assertEquals(MorphemeAttribute::class.java, attClass)
-          assertEquals("morpheme", key)
-          assertTrue(value is ToXContent)
-
           builder.field(key, value)
         })
     builder.endObject()
@@ -108,10 +119,33 @@ class MorphemeAttributeImplTest {
     assertEquals(morpheme.normalizedForm(), deserialized.morpheme.normalizedForm)
     assertEquals(morpheme.readingForm(), deserialized.morpheme.readingForm)
     assertEquals(morpheme.partOfSpeech(), deserialized.morpheme.partOfSpeech)
+    assertEquals(offsets, deserialized.morpheme.offsetMap)
+  }
+
+  @Test
+  fun toXContentNullMorpheme() {
+    var morphemeAtt = MorphemeAttributeImpl()
+
+    val builder = XContentBuilder.builder(XContentType.JSON.xContent())
+    builder.startObject()
+    morphemeAtt.reflectWith(
+        fun(attClass, key, value) {
+          assertEquals(MorphemeAttribute::class.java, attClass)
+          builder.field(key, value)
+        })
+    builder.endObject()
+    builder.flush()
+
+    val serialized = builder.getOutputStream().toString()
+    val deserialized = Json.decodeFromString<MorphemeHolder>(serialized)
+    assertNull(deserialized.morpheme)
   }
 }
 
-@Serializable data class MorphemeHolder(val morpheme: MorphemeAttributeHolder)
+@Serializable
+data class MorphemeHolder(
+    val morpheme: MorphemeAttributeHolder?,
+)
 
 @Serializable
 data class MorphemeAttributeHolder(
@@ -120,4 +154,5 @@ data class MorphemeAttributeHolder(
     val normalizedForm: String,
     val readingForm: String,
     val partOfSpeech: List<String>,
+    val offsetMap: List<Int>,
 )

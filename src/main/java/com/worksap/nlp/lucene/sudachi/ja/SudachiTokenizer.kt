@@ -55,11 +55,12 @@ class SudachiTokenizer(
   override fun incrementToken(): Boolean {
     clearAttributes()
     var m = iterator.next() ?: return false
+    val baseOffset = iterator.baseOffset
 
     morphemeAtt.setMorpheme(m)
-    posLenAtt.positionLength = 1
-    posIncAtt.positionIncrement = 1
-    val baseOffset = iterator.baseOffset
+    morphemeAtt.setOffsets((m.begin()..m.end()).map { i -> correctOffset(baseOffset + i) })
+    posLenAtt.setPositionLength(1)
+    posIncAtt.setPositionIncrement(1)
     offsetAtt.setOffset(correctOffset(baseOffset + m.begin()), correctOffset(baseOffset + m.end()))
     termAtt.setEmpty().append(m.surface())
     return true
